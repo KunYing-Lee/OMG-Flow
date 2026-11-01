@@ -17,9 +17,18 @@ from humanoid_policy.policy_runtime import PolicyRuntime
 from humanoid_policy.utils.remote_controller_filter import KeyMap
 from std_msgs.msg import String
 
+from omg.pipeline.schedule import Schedule
 from omg.realtime.deployment import DeploymentBridge
 from omg.realtime.native import RemotePlanner
 from omg.realtime.reference_stream import ReferenceReceiver, encode_window
+
+from residual50 import (
+    ACTION_FRAMES,
+    ResidualActor,
+    ResidualCorrector,
+    ResidualRegistry,
+    open_onnx_session,
+)
 
 
 class Native50Runtime(PolicyRuntime):
@@ -32,6 +41,8 @@ class Native50Runtime(PolicyRuntime):
         self.active = False
         self.failed = False
         self.receiver = None
+        self.corrector = None
+        self.tape = None
 
     def handle_low_state(self, msg):
         # Y must also cancel an initial plan before motion mode is entered.
@@ -67,8 +78,11 @@ class Native50Runtime(PolicyRuntime):
                 )
             else:
                 history = measured
+            schedule = Schedule(switch_seconds=self.port.args.switch_seconds)
             self.bridge = DeploymentBridge(
-                RemotePlanner(self.port.args.connect), self.port.args.text
+                RemotePlanner(self.port.args.connect, schedule),
+                self.port.args.text,
+                schedule=schedule,
             )
             self.pending = self.pool.submit(self.bridge.activate, history)
             self.port.get_logger().info(
@@ -163,6 +177,15 @@ class Native50Runtime(PolicyRuntime):
                 policy.last_action.fill(0)
                 policy.history.clear()
                 self.receiver = ReferenceReceiver(policy.handles.onnx_to_g1)
+                self.corrector = getattr(self.port, "residual_corrector", None)
+                self.tape = None
+                if self.corrector is not None:
+                    self.corrector.reset()
+                    initial = np.asarray(self.bridge.timeline.qpos, np.float32)
+                    self.tape = np.zeros((self.port.args.frames + 111, 36), np.float32)
+                    self.tape[: len(initial)] = initial
+                    self.tape[len(initial):] = initial[-1]
+                    self.port.get_logger().info("Residual enabled: " + self.port.residual_name)
                 self.bridge.origin = (
                     time.monotonic()
                 )  # initial activation, before frame0
@@ -201,8 +224,22 @@ class Native50Runtime(PolicyRuntime):
                     )
                 except Exception:  # noqa: BLE001 - diagnostics must not stop motion
                     pass
+            reference = qpos
+            if self.corrector is not None:
+                correction = self.corrector.step(
+                    frame=frame,
+                    raw_reference=qpos,
+                    corrected_tape=self.tape,
+                    robot_state=state,
+                    last_action_onnx=self.port.native_policy.last_action,
+                )
+                if correction is not None:
+                    self.tape[correction.start: correction.start + ACTION_FRAMES, 7:36] = (
+                        correction.joints_g1
+                    )
+                reference = self.tape
             features, local = self.receiver.consume(
-                *encode_window(qpos, cursor, "live")
+                *encode_window(reference, cursor, "live")
             )
             action = self.port.native_policy.step(features, local, state)
             if time.monotonic() >= target + 0.02:
@@ -287,6 +324,22 @@ class Native50Node(HoloMotionPolicyNode):
         self.stop_publisher = self.create_publisher(
             String, "/humanoid/tracking_stop", 10
         )
+        self.residual_name = None
+        self.residual_corrector = None
+        registry = ResidualRegistry.discover(self.args.residual_dir)
+        entry = registry.resolve(
+            self.args.residual, self.args.text, warn=self.get_logger().warn
+        )
+        if entry is not None:
+            if abs(float(entry.manifest["switch_seconds"]) - float(self.args.switch_seconds)) > 1e-9:
+                raise ValueError("residual switch_seconds does not match --switch-seconds")
+            self.residual_corrector = ResidualCorrector(
+                ResidualActor(entry.manifest, open_onnx_session(entry))
+            )
+            self.residual_name = entry.name
+            self.get_logger().info("Residual model: " + entry.name)
+        else:
+            self.get_logger().info("Residual disabled")
         self.runtime = Native50Runtime(self, self.runtime)
         if self.runtime.state.policy_enabled:
             raise RuntimeError("Must initialize disabled")
@@ -306,6 +359,12 @@ def main():
     p.add_argument("--connect", required=True)
     p.add_argument("--text", default="raise hands")
     p.add_argument("--frames", type=int, default=250)
+    p.add_argument("--switch-seconds", type=float, default=1.0)
+    p.add_argument("--residual", default="off", help="off | auto | <registry entry>")
+    p.add_argument(
+        "--residual-dir",
+        default="/workspace/omglite-shadow-20261025/experiments/residuals",
+    )
     p.add_argument("--allow-no-native-stop", action="store_true")
     p.add_argument(
         "--config",
