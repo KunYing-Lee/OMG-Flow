@@ -48,11 +48,25 @@ class Native50Runtime(PolicyRuntime):
         if self.port.count_publishers("/humanoid/action") != 1:
             self.stop("Nonexclusive policy publisher")
             return False
-        if self.port.count_subscribers("/humanoid/tracking_stop") != 1:
-            self.stop("Expected exactly one native stop subscriber")
-            return False
+        n_stop = self.port.count_subscribers("/humanoid/tracking_stop")
+        if n_stop != 1:
+            if getattr(self.port.args, "allow_no_native_stop", False) and n_stop == 0:
+                self.port.get_logger().warn(
+                    "No native tracking_stop subscriber (original controller); "
+                    "stop path is operator SELECT/L1"
+                )
+            else:
+                self.stop("Expected exactly one native stop subscriber")
+                return False
         try:
-            history = self.port.sensors.startup_history()
+            measured = self.port.sensors.startup_history()
+            if getattr(self.port.args, "init_history", "measured") == "seed":
+                history = self._seed_history(measured[-1])
+                self.port.get_logger().info(
+                    "Initial history from seed_stand (root aligned to measured pose)"
+                )
+            else:
+                history = measured
             self.bridge = DeploymentBridge(
                 RemotePlanner(self.port.args.connect), self.port.args.text
             )
@@ -64,6 +78,29 @@ class Native50Runtime(PolicyRuntime):
         except Exception as error:  # noqa: BLE001 - stop at the robot callback boundary
             self.stop(str(error))
             return False
+
+    def _seed_history(self, measured_last):
+        seed = np.load(self.port.args.stand_seed)["qpos_36"].astype(np.float32)
+        pose = seed[-1].copy()
+
+        def yaw(q):
+            w, x, y, z = q
+            return float(np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z)))
+
+        d = (yaw(measured_last[3:7]) - yaw(pose[3:7]) + np.pi) % (2 * np.pi) - np.pi
+        c, sn = np.cos(d), np.sin(d)
+        x0, y0 = float(pose[0]), float(pose[1])
+        pose[0] = c * x0 - sn * y0 + measured_last[0]
+        pose[1] = sn * x0 + c * y0 + measured_last[1]
+        pose[2] = measured_last[2]
+        w1, x1, y1, z1 = np.array([np.cos(d / 2), 0.0, 0.0, np.sin(d / 2)])
+        w2, x2, y2, z2 = pose[3:7]
+        pose[3] = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+        pose[4] = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+        pose[5] = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
+        pose[6] = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
+        pose[3:7] /= np.linalg.norm(pose[3:7])
+        return np.repeat(pose[None, :], 10, axis=0).astype(np.float32)
 
     def _close_episode(self):
         self.active = False
@@ -152,6 +189,18 @@ class Native50Runtime(PolicyRuntime):
             time.sleep(max(0, target - time.monotonic()))
             state, _measured = self.port.sensors.read(record_history=False)
             qpos, cursor = self.bridge.tick()
+            if frame % 50 == 0:
+                try:
+                    pdo = self.port._policy_dof_order()
+                    row = qpos[int(cursor)]
+                    k = 7 + pdo.index("left_knee_joint")
+                    w = 7 + pdo.index("waist_pitch_joint")
+                    self.port.get_logger().info(
+                        "ref frame=%d knee=%+.2f waist_pitch=%+.2f root_z=%.3f"
+                        % (frame, row[k], row[w], row[2])
+                    )
+                except Exception:  # noqa: BLE001 - diagnostics must not stop motion
+                    pass
             features, local = self.receiver.consume(
                 *encode_window(qpos, cursor, "live")
             )
@@ -181,6 +230,14 @@ class Native50Node(HoloMotionPolicyNode):
         self.sensor_error = "Not initialized"
         self.attempted = False
         super().__init__()
+
+    def _policy_dof_order(self):
+        if not hasattr(self, "_pdo_cache"):
+            import yaml
+
+            cfg = yaml.safe_load(open(self.args.config))
+            self._pdo_cache = cfg["policy_dof_order"]
+        return self._pdo_cache
 
     def _low_state_callback(self, msg):
         if getattr(self, "_setup_completed", False):
@@ -249,6 +306,20 @@ def main():
     p.add_argument("--connect", required=True)
     p.add_argument("--text", default="raise hands")
     p.add_argument("--frames", type=int, default=250)
+    p.add_argument("--allow-no-native-stop", action="store_true")
+    p.add_argument(
+        "--config",
+        default="/workspace/omglite-shadow-20261025/config/g1_29dof_holomotion.yaml",
+    )
+    p.add_argument(
+        "--init-history",
+        choices=["measured", "seed"],
+        default="measured",
+    )
+    p.add_argument(
+        "--stand-seed",
+        default="/workspace/omglite-shadow-20261025/config/seed_stand.npz",
+    )
     p.add_argument("--check", action="store_true")
     a, ros_args = p.parse_known_args()
     if a.frames <= 0:

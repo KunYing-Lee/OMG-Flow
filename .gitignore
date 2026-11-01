@@ -27,3 +27,12 @@ tmp/
 runtime_materialize_configs/
 inputs/
 run_scripts/
+
+# dsh local deployment artifacts (2026-10-31)
+logs/
+shadow-v*/
+config/
+deploy-env/
+experiments/
+*.bak*
+__pycache__/
