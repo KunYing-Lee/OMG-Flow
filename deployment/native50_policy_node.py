@@ -246,6 +246,17 @@ class Native50Runtime(PolicyRuntime):
             t3 = time.monotonic()
             action = self.port.native_policy.step(features, local, state)
             t4 = time.monotonic()
+            if frame < 20:
+                win = reference[max(0, cursor - 1): cursor + 12, 7:36]
+                av = np.asarray(action, dtype=np.float32).reshape(-1)
+                qv = np.asarray(state["joint_pos"], dtype=np.float32).reshape(-1)
+                self.port.get_logger().info(
+                    "diag f=%d ref_knee=%.3f ref_wr=%.3f ref_hip=%.3f | "
+                    "act_min=%.2f act_max=%.2f act_rms=%.2f | q_knee=%.3f q_hip=%.3f"
+                    % (frame, float(win[:, 3].mean()), float(win[:, 13].mean()),
+                       float(win[:, 0].mean()), float(av.min()), float(av.max()),
+                       float(np.sqrt(np.mean(av * av))), float(qv[3]), float(qv[0]))
+                )
             slack = 0.02  # one 50 Hz period for every tick
             if time.monotonic() >= target + slack:
                 raise TimeoutError(
