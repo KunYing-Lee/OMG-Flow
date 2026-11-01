@@ -225,6 +225,10 @@ class Native50Runtime(PolicyRuntime):
                         % (event["plan_id"], event["request_frame"],
                            event["accepted_frame"], event["switch_frame"], took)
                     )
+                    if self.tape is not None:
+                        plan = timeline.raw[-1]
+                        switch = int(event["switch_frame"])
+                        self.tape[switch: switch + plan.shape[0], 0:7] = plan[:, 0:7]
                 self._plan_events_seen = len(timeline.events)
             reference = qpos
             if self.corrector is not None:
@@ -250,11 +254,14 @@ class Native50Runtime(PolicyRuntime):
                 win = reference[max(0, cursor - 1): cursor + 12, 7:36]
                 av = np.asarray(action, dtype=np.float32).reshape(-1)
                 qv = np.asarray(state["joint_pos"], dtype=np.float32).reshape(-1)
+                zp = reference[int(cursor), 2]
+                zq = qpos[int(cursor), 2] if qpos.ndim == 2 else float("nan")
                 self.port.get_logger().info(
-                    "diag f=%d ref_knee=%.3f ref_wr=%.3f ref_hip=%.3f | "
+                    "diag f=%d ref_knee=%.3f ref_wr=%.3f ref_hip=%.3f ref_z=%.3f plan_z=%.3f | "
                     "act_min=%.2f act_max=%.2f act_rms=%.2f | q_knee=%.3f q_hip=%.3f"
                     % (frame, float(win[:, 3].mean()), float(win[:, 13].mean()),
-                       float(win[:, 0].mean()), float(av.min()), float(av.max()),
+                       float(win[:, 0].mean()), float(zp), float(zq),
+                       float(av.min()), float(av.max()),
                        float(np.sqrt(np.mean(av * av))), float(qv[3]), float(qv[0]))
                 )
             slack = 0.02  # one 50 Hz period for every tick
