@@ -1,4 +1,4 @@
-"""Replace the official policy node; retain its remote gates and motor mapping.
+﻿"""Replace the official policy node; retain its remote gates and motor mapping.
 
 Use only with the native50 controller stop/watchdog patch. Loading never
 presses remote buttons. Faults stop tracking rather than switching policies.
@@ -70,14 +70,16 @@ class Native50Runtime(PolicyRuntime):
                 self.stop("Expected exactly one native stop subscriber")
                 return False
         try:
-            measured = self.port.sensors.startup_history()
-            if getattr(self.port.args, "init_history", "measured") == "seed":
-                history = self._seed_history(measured[-1])
-                self.port.get_logger().info(
-                    "Initial history from seed_stand (root aligned to measured pose)"
+            self.port.get_logger().info(
+                "startup history frames: %d (last %.3fs ago)"
+                % (
+                    len(self.port.sensors.history),
+                    -1.0
+                    if self.port.sensors.last_history_time is None
+                    else time.monotonic() - self.port.sensors.last_history_time,
                 )
-            else:
-                history = measured
+            )
+            history = self.port.sensors.startup_history()
             schedule = Schedule(switch_seconds=self.port.args.switch_seconds)
             self.bridge = DeploymentBridge(
                 RemotePlanner(self.port.args.connect, schedule),
@@ -92,29 +94,6 @@ class Native50Runtime(PolicyRuntime):
         except Exception as error:  # noqa: BLE001 - stop at the robot callback boundary
             self.stop(str(error))
             return False
-
-    def _seed_history(self, measured_last):
-        seed = np.load(self.port.args.stand_seed)["qpos_36"].astype(np.float32)
-        pose = seed[-1].copy()
-
-        def yaw(q):
-            w, x, y, z = q
-            return float(np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z)))
-
-        d = (yaw(measured_last[3:7]) - yaw(pose[3:7]) + np.pi) % (2 * np.pi) - np.pi
-        c, sn = np.cos(d), np.sin(d)
-        x0, y0 = float(pose[0]), float(pose[1])
-        pose[0] = c * x0 - sn * y0 + measured_last[0]
-        pose[1] = sn * x0 + c * y0 + measured_last[1]
-        pose[2] = measured_last[2]
-        w1, x1, y1, z1 = np.array([np.cos(d / 2), 0.0, 0.0, np.sin(d / 2)])
-        w2, x2, y2, z2 = pose[3:7]
-        pose[3] = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
-        pose[4] = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
-        pose[5] = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
-        pose[6] = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
-        pose[3:7] /= np.linalg.norm(pose[3:7])
-        return np.repeat(pose[None, :], 10, axis=0).astype(np.float32)
 
     def _close_episode(self):
         self.active = False
@@ -163,7 +142,14 @@ class Native50Runtime(PolicyRuntime):
             if self.active or self.pending is not None:
                 self.stop(str(error))
                 return
-            self.port.sensor_error = str(error)
+            message = str(error)
+            if message != getattr(self, "_last_sensor_error", None):
+                self._last_sensor_error = message
+                self.port.get_logger().warn(
+                    "Native50 idle sensor read failed (history=%d): %s"
+                    % (len(self.port.sensors.history), message)
+                )
+            self.port.sensor_error = message
             self.port.sensors.history.clear()
             self.run_policy_step()
             return
@@ -186,14 +172,14 @@ class Native50Runtime(PolicyRuntime):
                     self.tape[: len(initial)] = initial
                     self.tape[len(initial):] = initial[-1]
                     self.port.get_logger().info("Residual enabled: " + self.port.residual_name)
-                self.bridge.origin = (
-                    time.monotonic()
-                )  # initial activation, before frame0
                 self.active = True
                 self.state.current_policy_mode = "motion"
                 self.state.motion_in_progress = True
                 self.port._publish_control_params()
                 self.port._publish_policy_mode()
+                # Anchor the schedule after the activation work and one frame
+                # ahead, so the first control tick lands inside its 20 ms window.
+                self.bridge.origin = time.monotonic() + 0.02
             except Exception as error:  # noqa: BLE001 - stop at the robot callback boundary
                 self.stop(str(error))
                 return
@@ -208,22 +194,38 @@ class Native50Runtime(PolicyRuntime):
             if frame >= self.port.args.frames:
                 self.stop("Requested bounded episode completed")
                 return
+            if frame < 3:
+                # Startup ticks: first-call costs can exceed one 20 ms period.
+                # Re-anchor per tick so tick() stays inside its own window.
+                self.bridge.origin = time.monotonic() - frame / 50.0
             target = self.bridge.origin + frame / 50
             time.sleep(max(0, target - time.monotonic()))
+            t0 = time.monotonic()
             state, _measured = self.port.sensors.read(record_history=False)
+            t1 = time.monotonic()
             qpos, cursor = self.bridge.tick()
-            if frame % 50 == 0:
-                try:
-                    pdo = self.port._policy_dof_order()
-                    row = qpos[int(cursor)]
-                    k = 7 + pdo.index("left_knee_joint")
-                    w = 7 + pdo.index("waist_pitch_joint")
+            t2 = time.monotonic()
+            timeline = self.bridge.timeline
+            pending = timeline.pending
+            if pending is not None and getattr(self, "_plan_pending_id", None) != pending.plan_id:
+                self._plan_pending_id = pending.plan_id
+                self._plan_request_at = time.monotonic()
+                self.port.get_logger().info(
+                    "plan %d requested frame=%d switch=%d deadline=%d"
+                    % (pending.plan_id, pending.request_frame,
+                       pending.switch_frame, pending.deadline_frame)
+                )
+            seen = getattr(self, "_plan_events_seen", 0)
+            if len(timeline.events) > seen:
+                for event in timeline.events[seen:]:
+                    started = getattr(self, "_plan_request_at", None)
+                    took = -1.0 if started is None else (time.monotonic() - started) * 1000.0
                     self.port.get_logger().info(
-                        "ref frame=%d knee=%+.2f waist_pitch=%+.2f root_z=%.3f"
-                        % (frame, row[k], row[w], row[2])
+                        "plan %d accepted req=%d accept=%d switch=%d (%.0f ms)"
+                        % (event["plan_id"], event["request_frame"],
+                           event["accepted_frame"], event["switch_frame"], took)
                     )
-                except Exception:  # noqa: BLE001 - diagnostics must not stop motion
-                    pass
+                self._plan_events_seen = len(timeline.events)
             reference = qpos
             if self.corrector is not None:
                 correction = self.corrector.step(
@@ -238,12 +240,29 @@ class Native50Runtime(PolicyRuntime):
                         correction.joints_g1
                     )
                 reference = self.tape
-            features, local = self.receiver.consume(
-                *encode_window(reference, cursor, "live")
-            )
+            packet = encode_window(reference, cursor, "live")
+            t2a = time.monotonic()
+            features, local = self.receiver.consume(*packet)
+            t3 = time.monotonic()
             action = self.port.native_policy.step(features, local, state)
-            if time.monotonic() >= target + 0.02:
-                raise TimeoutError("Tracker missed its20ms control interval")
+            t4 = time.monotonic()
+            slack = 0.02  # one 50 Hz period for every tick
+            if time.monotonic() >= target + slack:
+                raise TimeoutError(
+                    "Tracker missed its20ms control interval (frame=%d, "
+                    "elapsed=%.1fms, slack=%.0fms, read=%.1f, tick=%.1f, "
+                    "encode=%.1f, consume=%.1f, step=%.1f)"
+                    % (
+                        frame,
+                        (time.monotonic() - target) * 1000.0,
+                        slack * 1000.0,
+                        (t1 - t0) * 1000.0,
+                        (t2 - t1) * 1000.0,
+                        (t2a - t2) * 1000.0,
+                        (t3 - t2a) * 1000.0,
+                        (t4 - t3) * 1000.0,
+                    )
+                )
             self.apply_policy_output(
                 action,
                 action_scale=self.port.motion_action_scale_onnx,
@@ -252,6 +271,33 @@ class Native50Runtime(PolicyRuntime):
                 is_motion=True,
             )
             self.publish_current_action()
+            if frame % 50 == 0:
+                try:
+                    pdo = self.port._policy_dof_order()
+                    row = qpos[int(cursor)]
+                    k = 7 + pdo.index("left_knee_joint")
+                    w = 7 + pdo.index("waist_pitch_joint")
+                    self.port.get_logger().info(
+                        "ref frame=%d knee=%+.2f waist_pitch=%+.2f root_z=%.3f"
+                        % (frame, row[k], row[w], row[2])
+                    )
+                except Exception:  # noqa: BLE001 - diagnostics must not stop motion
+                    pass
+            if frame < 4:
+                self.port.get_logger().info(
+                    "tick frame=%d total=%.1fms budget=%.0fms "
+                    "read=%.1f tick=%.1f encode=%.1f consume=%.1f step=%.1f"
+                    % (
+                        frame,
+                        (time.monotonic() - target) * 1000.0,
+                        slack * 1000.0,
+                        (t1 - t0) * 1000.0,
+                        (t2 - t1) * 1000.0,
+                        (t2a - t2) * 1000.0,
+                        (t3 - t2a) * 1000.0,
+                        (t4 - t3) * 1000.0,
+                    )
+                )
         except Exception as error:  # noqa: BLE001 - stop at the robot callback boundary
             self.stop(str(error))
 
@@ -267,6 +313,7 @@ class Native50Node(HoloMotionPolicyNode):
         self.sensor_error = "Not initialized"
         self.attempted = False
         super().__init__()
+        self.get_logger().info("native50 node build: first-tick-fix-670a04d")
 
     def _policy_dof_order(self):
         if not hasattr(self, "_pdo_cache"):
@@ -275,6 +322,37 @@ class Native50Node(HoloMotionPolicyNode):
             cfg = yaml.safe_load(open(self.args.config))
             self._pdo_cache = cfg["policy_dof_order"]
         return self._pdo_cache
+
+    def _warm_reference_stream(self):
+        try:
+            self._policy_dof_order()
+            from omg.tracking.holomotion.reference import precompute_reference_features
+
+            warm = np.zeros((13, 36), np.float32)
+            warm[:, 2] = 0.78
+            warm[:, 3] = 1.0
+            warm_state = dict(
+                joint_pos=np.zeros(29, np.float32),
+                joint_vel=np.zeros(29, np.float32),
+                root_quat_wxyz=np.array([1.0, 0.0, 0.0, 0.0], np.float32),
+                gyro=np.zeros(3, np.float32),
+            )
+            t0 = time.monotonic()
+            receiver = ReferenceReceiver(self.native_policy.handles.onnx_to_g1)
+            for warm_frame in (0, 1):
+                features, local = receiver.consume(
+                    *encode_window(warm, warm_frame, "warm")
+                )
+                self.native_policy.step(features, local, warm_state)
+            self.native_policy.tracker.reset()
+            self.native_policy.last_action.fill(0)
+            self.native_policy.history.clear()
+            self.get_logger().info(
+                "reference+tracker warm: %.1f ms (encode+consume+step x2)"
+                % ((time.monotonic() - t0) * 1000.0)
+            )
+        except Exception as error:  # noqa: BLE001 - warmup must never block startup
+            self.get_logger().warn("reference stream warm failed: %s" % error)
 
     def _low_state_callback(self, msg):
         if getattr(self, "_setup_completed", False):
@@ -336,6 +414,21 @@ class Native50Node(HoloMotionPolicyNode):
             self.residual_corrector = ResidualCorrector(
                 ResidualActor(entry.manifest, open_onnx_session(entry))
             )
+            warm = np.zeros((200, 36), np.float32)
+            warm[:, 2] = 0.78
+            warm[:, 3] = 1.0
+            warm_state = dict(
+                joint_pos=warm[0, 7:].copy(),
+                joint_vel=np.zeros(29, np.float32),
+                root_quat_wxyz=np.array([1, 0, 0, 0], np.float32),
+                gyro=np.zeros(3, np.float32),
+            )
+            for _ in range(2):
+                self.residual_corrector.step(
+                    frame=0, raw_reference=warm, corrected_tape=warm,
+                    robot_state=warm_state, last_action_onnx=np.zeros(29, np.float32),
+                )
+                self.residual_corrector.reset()
             self.residual_name = entry.name
             self.get_logger().info("Residual model: " + entry.name)
         else:
@@ -343,6 +436,7 @@ class Native50Node(HoloMotionPolicyNode):
         self.runtime = Native50Runtime(self, self.runtime)
         if self.runtime.state.policy_enabled:
             raise RuntimeError("Must initialize disabled")
+        self._warm_reference_stream()
         self.get_logger().info("Native50 loaded DISABLED; no remote buttons generated")
 
     def destroy_node(self):
@@ -369,15 +463,6 @@ def main():
     p.add_argument(
         "--config",
         default="/workspace/omglite-shadow-20261025/config/g1_29dof_holomotion.yaml",
-    )
-    p.add_argument(
-        "--init-history",
-        choices=["measured", "seed"],
-        default="measured",
-    )
-    p.add_argument(
-        "--stand-seed",
-        default="/workspace/omglite-shadow-20261025/config/seed_stand.npz",
     )
     p.add_argument("--check", action="store_true")
     a, ros_args = p.parse_known_args()
