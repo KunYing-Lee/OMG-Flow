@@ -25,6 +25,10 @@ def main():
     p.add_argument("--seed", type=int, default=1234)
     p.add_argument("--switch-seconds", type=float, default=1.0)
     p.add_argument("--video", action="store_true")
+    p.add_argument("--onnx")
+    p.add_argument("--metadata")
+    p.add_argument("--text-encoder")
+    p.add_argument("--engine-cache")
     args = p.parse_args()
     schedule = Schedule(args.switch_seconds)
     out = Path(args.output)
@@ -33,7 +37,15 @@ def main():
     seed = np.load(args.seed_motion)
     assert float(seed["fps"]) == 50
     history = motion(seed["qpos_36"][-10:], 10)
-    if args.mode == "async":
+    if args.onnx:
+        # local patch: TensorRT planner path (deployment backend)
+        from omg.pipeline.tensorrt import TensorRTPlanner
+
+        planner = TensorRTPlanner(
+            args.onnx, metadata=args.metadata, text_encoder=args.text_encoder,
+            engine_cache=args.engine_cache, seed=args.seed,
+        )
+    elif args.mode == "async":
         from omg.pipeline.process import ProcessPlanner
 
         planner = ProcessPlanner(args.config, args.checkpoint, seed=args.seed)
@@ -86,7 +98,7 @@ def main():
             json.dumps(
                 {
                     "config": vars(args),
-                    "checkpoint_step": planner.step,
+                    "checkpoint_step": getattr(planner, "step", None),
                     "events": timeline.events,
                 },
                 indent=2,
@@ -100,7 +112,7 @@ def main():
                     "error": str(error),
                     "config": vars(args),
                     "completed_frames": len(runner.executed_qpos_36),
-                    "checkpoint_step": planner.step,
+                    "checkpoint_step": getattr(planner, "step", None),
                 },
                 indent=2,
             )
