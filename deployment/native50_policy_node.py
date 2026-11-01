@@ -1,10 +1,11 @@
-﻿"""Replace the official policy node; retain its remote gates and motor mapping.
+"""Replace the official policy node; retain its remote gates and motor mapping.
 
 Use only with the native50 controller stop/watchdog patch. Loading never
 presses remote buttons. Faults stop tracking rather than switching policies.
 """
 
 import argparse
+import csv
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -43,6 +44,24 @@ class Native50Runtime(PolicyRuntime):
         self.receiver = None
         self.corrector = None
         self.tape = None
+        # Per-frame recorder: every stage of the 36-dim reference and the policy I/O.
+        self._record = None
+        self._record_file = None
+        record_path = getattr(self.port.args, "record", "")
+        if record_path:
+            self._record_file = open(record_path, "w", encoding="utf-8", newline="")
+            self._record = csv.writer(self._record_file)
+            header = ["frame", "t"]
+            header += ["plan%d" % i for i in range(36)]
+            header += ["tape%d" % i for i in range(36)]
+            header += ["action%d" % i for i in range(29)]
+            header += ["q%d" % i for i in range(29)]
+            header += ["dq%d" % i for i in range(29)]
+            header += ["quat%d" % i for i in range(4)]
+            header += ["gyro%d" % i for i in range(3)]
+            header += ["delta_max", "decision"]
+            header += ["read_ms", "tick_ms", "encode_ms", "consume_ms", "step_ms"]
+            self._record.writerow(header)
 
     def handle_low_state(self, msg):
         # Y must also cancel an initial plan before motion mode is entered.
@@ -231,6 +250,7 @@ class Native50Runtime(PolicyRuntime):
                         self.tape[switch: switch + plan.shape[0], 0:7] = plan[:, 0:7]
                 self._plan_events_seen = len(timeline.events)
             reference = qpos
+            correction = None
             if self.corrector is not None:
                 correction = self.corrector.step(
                     frame=frame,
@@ -289,6 +309,25 @@ class Native50Runtime(PolicyRuntime):
                 is_motion=True,
             )
             self.publish_current_action()
+            if self._record is not None:
+                row = [frame, time.monotonic()]
+                row.extend(np.asarray(qpos[int(cursor)], np.float32).tolist())     # raw plan
+                row.extend(np.asarray(reference[int(cursor)], np.float32).tolist())  # tape
+                row.extend(np.asarray(action, np.float32).reshape(-1).tolist())    # tracker action
+                for key in ("joint_pos", "joint_vel"):
+                    row.extend(np.asarray(state[key], np.float32).reshape(-1)[:29].tolist())
+                row.extend(np.asarray(state["root_quat_wxyz"], np.float32).reshape(-1)[:4].tolist())
+                row.extend(np.asarray(state["gyro"], np.float32).reshape(-1)[:3].tolist())
+                delta_max, decision = 0.0, 0
+                if correction is not None:
+                    base = qpos[correction.start: correction.start + ACTION_FRAMES, 7:36]
+                    delta_max = float(np.max(np.abs(correction.joints_g1 - base)))
+                    decision = 1
+                row.extend([delta_max, decision])
+                row.extend([(t1 - t0) * 1000.0, (t2 - t1) * 1000.0, (t2a - t2) * 1000.0,
+                            (t3 - t2a) * 1000.0, (t4 - t3) * 1000.0])
+                self._record.writerow(row)
+                self._record_file.flush()
             if frame % 50 == 0:
                 try:
                     pdo = self.port._policy_dof_order()
@@ -478,6 +517,7 @@ def main():
         default="/workspace/omglite-shadow-20261025/experiments/residuals",
     )
     p.add_argument("--allow-no-native-stop", action="store_true")
+    p.add_argument("--record", default="", help="per-frame CSV: plan/tape/action/state/timings")
     p.add_argument(
         "--config",
         default="/workspace/omglite-shadow-20261025/config/g1_29dof_holomotion.yaml",
