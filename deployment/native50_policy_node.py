@@ -6,9 +6,11 @@ presses remote buttons. Faults stop tracking rather than switching policies.
 
 import argparse
 import csv
+import json
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import numpy as np
 import rclpy
@@ -45,8 +47,12 @@ class Native50Runtime(PolicyRuntime):
         self.corrector = None
         self.tape = None
         # Per-frame recorder: every stage of the 36-dim reference and the policy I/O.
+        # Model-agnostic: "plan" is whatever planner is connected (base HF or SFT);
+        # "tape" equals "plan" when no residual is active.
         self._record = None
         self._record_file = None
+        self._record_meta = None
+        self._record_meta_path = None
         record_path = getattr(self.port.args, "record", "")
         if record_path:
             self._record_file = open(record_path, "w", encoding="utf-8", newline="")
@@ -59,9 +65,26 @@ class Native50Runtime(PolicyRuntime):
             header += ["dq%d" % i for i in range(29)]
             header += ["quat%d" % i for i in range(4)]
             header += ["gyro%d" % i for i in range(3)]
-            header += ["delta_max", "decision"]
+            header += ["delta_max", "decision", "residual"]
             header += ["read_ms", "tick_ms", "encode_ms", "consume_ms", "step_ms"]
             self._record.writerow(header)
+            self._record_meta_path = Path(record_path + ".meta.json")
+            args = {k: v for k, v in vars(self.port.args).items() if k != "record"}
+            self._record_meta = {
+                "record": record_path,
+                "node_file": os.path.abspath(__file__),
+                "started": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "planner_endpoint": args.get("connect"),
+                "text": args.get("text"),
+                "switch_seconds": args.get("switch_seconds"),
+                "residual_arg": args.get("residual"),
+                "residual_resolved": None,
+                "residual_active": None,
+                "args": args,
+            }
+            self._record_meta_path.write_text(
+                json.dumps(self._record_meta, indent=1, default=str), encoding="utf-8"
+            )
 
     def handle_low_state(self, msg):
         # Y must also cancel an initial plan before motion mode is entered.
@@ -323,11 +346,22 @@ class Native50Runtime(PolicyRuntime):
                     base = qpos[correction.start: correction.start + ACTION_FRAMES, 7:36]
                     delta_max = float(np.max(np.abs(correction.joints_g1 - base)))
                     decision = 1
-                row.extend([delta_max, decision])
+                row.extend([delta_max, decision, 1 if self.corrector is not None else 0])
                 row.extend([(t1 - t0) * 1000.0, (t2 - t1) * 1000.0, (t2a - t2) * 1000.0,
                             (t3 - t2a) * 1000.0, (t4 - t3) * 1000.0])
                 self._record.writerow(row)
                 self._record_file.flush()
+                if self._record_meta is not None and self._record_meta.get("residual_active") is None:
+                    self._record_meta["residual_active"] = self.corrector is not None
+                    if self.corrector is not None:
+                        manifest = getattr(self.corrector.actor, "manifest", {})
+                        self._record_meta["residual_resolved"] = (
+                            manifest.get("name") or manifest.get("model") or manifest.get("checkpoint")
+                        )
+                        self._record_meta["residual_manifest"] = manifest
+                    self._record_meta_path.write_text(
+                        json.dumps(self._record_meta, indent=1, default=str), encoding="utf-8"
+                    )
             if frame % 50 == 0:
                 try:
                     pdo = self.port._policy_dof_order()
