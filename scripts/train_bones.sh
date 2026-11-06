@@ -34,9 +34,10 @@ if [[ ! -e "$FLOW_OUTPUT/latest.pt" ]]; then
     "${trainer[@]}" --stop-after 12
 fi
 read -r step target < <("$python" - "$FLOW_OUTPUT/latest.pt" <<'PY'
-import sys, torch
+import os, sys, torch, yaml
 saved = torch.load(sys.argv[1], map_location="cpu", weights_only=True)
-print(saved["step"], saved["config"]["steps"])
+with open(os.environ.get("FLOW_CONFIG") or "configs/flow/bones.yaml") as config:
+    print(saved["step"], yaml.safe_load(config)["steps"])
 PY
 )
 if ((step == target)); then exit 0; fi

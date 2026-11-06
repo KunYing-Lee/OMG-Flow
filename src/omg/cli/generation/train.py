@@ -137,13 +137,20 @@ def main():
                       text_manifest_sha256=cache.signature, stats_sha256=hashlib.sha256(stats_path.read_bytes()).hexdigest(),
                       world_size=world, device=args.device)
     start, best = 0, float("inf")
+    anchor, phase = cfg["warmup"], 0.0
     if args.resume:
         checkpoint = torch.load(last, map_location="cpu", weights_only=True)
-        if checkpoint["config"] != cfg or checkpoint["provenance"] != provenance:
+        old = checkpoint["config"]
+        if (dict(old, steps=cfg["steps"]) != cfg or cfg["steps"] < old["steps"]
+                or checkpoint["provenance"] != provenance):
             raise ValueError("Cannot resume with different data, configuration or world size")
         flow.load_state_dict(checkpoint["model"])
         optim.load_state_dict(checkpoint["optimizer"])
         start, best = checkpoint["step"], checkpoint["best_validation"]
+        anchor, phase = checkpoint.get("cosine_anchor", (anchor, phase))
+        if cfg["steps"] > old["steps"] and start > anchor:
+            phase += (1 - phase) * (start - anchor) / (old["steps"] - anchor)
+            anchor = start
         del checkpoint
     stop = cfg["steps"] if args.stop_after is None else args.stop_after
     if not start < stop <= cfg["steps"]:
@@ -172,7 +179,7 @@ def main():
         warm = cfg["warmup"]
         lr = (cfg["lr"] * step / warm if step <= warm else
               cfg["min_lr"] + 0.5 * (cfg["lr"] - cfg["min_lr"]) *
-              (1 + math.cos(math.pi * (step - warm) / (cfg["steps"] - warm))))
+              (1 + math.cos(math.pi * (phase + (1 - phase) * (step - anchor) / (cfg["steps"] - anchor)))))
         optim.param_groups[0]["lr"] = lr
         optim.zero_grad(set_to_none=True)
         with torch.autocast(device.type, torch.bfloat16, enabled=gpu):
@@ -206,7 +213,7 @@ def main():
             if rank == 0:
                 payload = dict(model=flow.state_dict(), optimizer=optim.state_dict(), step=step, best_validation=best,
                                config=cfg, model_config=cfg["model"], mean=mean.cpu(), std=std.cpu(), provenance=provenance,
-                               source_revision=revision)
+                               source_revision=revision, cosine_anchor=(anchor, phase))
                 tmp = last.with_suffix(".tmp")
                 torch.save(payload, tmp)
                 tmp.replace(last)
