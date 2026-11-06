@@ -5,7 +5,6 @@ presses remote buttons. Faults stop tracking rather than switching policies.
 """
 
 import argparse
-import csv
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -21,6 +20,7 @@ from std_msgs.msg import String
 from omg.pipeline.schedule import Schedule
 from omg.realtime.deployment import DeploymentBridge
 from omg.realtime.native import RemotePlanner
+from omg.realtime.recording import Recorder
 from omg.realtime.reference_stream import ReferenceReceiver, encode_window
 
 from residual50 import (
@@ -44,30 +44,66 @@ class Native50Runtime(PolicyRuntime):
         self.receiver = None
         self.corrector = None
         self.tape = None
-        # Per-frame recorder: every stage of the 36-dim reference and the policy I/O.
-        self._record = None
-        self._record_file = None
+        # Module-level recorder (src/omg/realtime/recording.py): records the four
+        # module outputs (plan / residual delta / action / measured), the event
+        # timeline and the transform parameters. Model-agnostic.
+        self.recorder = None
+        self._recorder_configured = False
+        self._tau = np.zeros(29, np.float32)
         record_path = getattr(self.port.args, "record", "")
         if record_path:
-            self._record_file = open(record_path, "w", encoding="utf-8", newline="")
-            self._record = csv.writer(self._record_file)
-            header = ["frame", "t"]
-            header += ["plan%d" % i for i in range(36)]
-            header += ["tape%d" % i for i in range(36)]
-            header += ["action%d" % i for i in range(29)]
-            header += ["q%d" % i for i in range(29)]
-            header += ["dq%d" % i for i in range(29)]
-            header += ["quat%d" % i for i in range(4)]
-            header += ["gyro%d" % i for i in range(3)]
-            header += ["delta_max", "decision"]
-            header += ["read_ms", "tick_ms", "encode_ms", "consume_ms", "step_ms"]
-            self._record.writerow(header)
+            self.recorder = Recorder(
+                record_path,
+                {
+                    "node_file": os.path.abspath(__file__),
+                    "args": {k: v for k, v in vars(self.port.args).items() if k != "record"},
+                },
+            )
+            self.recorder.update_meta(
+                planner_endpoint=getattr(self.port.args, "connect", None),
+                text=getattr(self.port.args, "text", None),
+                switch_seconds=getattr(self.port.args, "switch_seconds", None),
+                residual_arg=getattr(self.port.args, "residual", None),
+            )
+
+    def _configure_recorder(self):
+        """One-shot: store the transform parameters the recording needs to be replayable."""
+        if self.recorder is None or self._recorder_configured:
+            return
+        self._recorder_configured = True
+        meta = dict(
+            action_scale=np.asarray(self.port.motion_action_scale_onnx, np.float32).tolist(),
+            default_angles=np.asarray(self.port.motion_default_angles_onnx, np.float32).tolist(),
+            onnx_to_real=np.asarray(self.port.motion_onnx_to_real, np.int64).tolist(),
+            residual_active=self.corrector is not None,
+        )
+        policy = getattr(self.port, "native_policy", None)
+        metadata = getattr(policy, "metadata", None)
+        if metadata is not None:
+            meta["tracker_metadata"] = dict(
+                obs_schema_version=getattr(metadata, "obs_schema_version", None),
+                n_fut_frames=getattr(metadata, "n_fut_frames", None),
+                context_length=getattr(metadata, "context_length", None),
+            )
+        if self.corrector is not None:
+            manifest = getattr(getattr(self.corrector, "actor", None), "manifest", {})
+            meta["residual_resolved"] = (
+                manifest.get("name") or manifest.get("model") or manifest.get("checkpoint")
+            )
+            meta["residual_manifest"] = manifest
+        self.recorder.update_meta(**meta)
 
     def handle_low_state(self, msg):
         # Y must also cancel an initial plan before motion mode is entered.
         self.port.remote_controller.set(msg.wireless_remote)
         if self.pending is not None and self.port.remote_controller.button[KeyMap.Y]:
             self._close_episode()
+        try:
+            self._tau = np.asarray(
+                [float(m.tau_est) for m in msg.motor_state[:29]], np.float32
+            )
+        except Exception:  # noqa: BLE001 - recording must never break control
+            pass
         super().handle_low_state(msg)
 
     def switch_to_motion_mode(self):
@@ -248,6 +284,18 @@ class Native50Runtime(PolicyRuntime):
                         plan = timeline.raw[-1]
                         switch = int(event["switch_frame"])
                         self.tape[switch: switch + plan.shape[0], 0:7] = plan[:, 0:7]
+                    if self.recorder is not None:
+                        self.recorder.plan(
+                            plan_id=event["plan_id"],
+                            request_frame=event["request_frame"],
+                            accept_frame=event["accepted_frame"],
+                            switch_frame=event["switch_frame"],
+                            deadline_frame=int(event.get("deadline_frame",
+                                                         event["switch_frame"] - 11)),
+                            block=timeline.raw[-1],
+                            request_time=started,
+                            accept_time=time.monotonic(),
+                        )
                 self._plan_events_seen = len(timeline.events)
             reference = qpos
             correction = None
@@ -263,6 +311,13 @@ class Native50Runtime(PolicyRuntime):
                     self.tape[correction.start: correction.start + ACTION_FRAMES, 7:36] = (
                         correction.joints_g1
                     )
+                    if self.recorder is not None:
+                        self.recorder.decision(
+                            frame=frame,
+                            start=correction.start,
+                            delta=correction.delta,
+                            latent_norm=float(np.linalg.norm(correction.latent)),
+                        )
                 reference = self.tape
             packet = encode_window(reference, cursor, "live")
             t2a = time.monotonic()
@@ -270,20 +325,6 @@ class Native50Runtime(PolicyRuntime):
             t3 = time.monotonic()
             action = self.port.native_policy.step(features, local, state)
             t4 = time.monotonic()
-            if frame < 20:
-                win = reference[max(0, cursor - 1): cursor + 12, 7:36]
-                av = np.asarray(action, dtype=np.float32).reshape(-1)
-                qv = np.asarray(state["joint_pos"], dtype=np.float32).reshape(-1)
-                zp = reference[int(cursor), 2]
-                zq = qpos[int(cursor), 2] if qpos.ndim == 2 else float("nan")
-                self.port.get_logger().info(
-                    "diag f=%d ref_knee=%.3f ref_wr=%.3f ref_hip=%.3f ref_z=%.3f plan_z=%.3f | "
-                    "act_min=%.2f act_max=%.2f act_rms=%.2f | q_knee=%.3f q_hip=%.3f"
-                    % (frame, float(win[:, 3].mean()), float(win[:, 13].mean()),
-                       float(win[:, 0].mean()), float(zp), float(zq),
-                       float(av.min()), float(av.max()),
-                       float(np.sqrt(np.mean(av * av))), float(qv[3]), float(qv[0]))
-                )
             slack = 0.02  # one 50 Hz period for every tick
             if time.monotonic() >= target + slack:
                 raise TimeoutError(
@@ -309,25 +350,24 @@ class Native50Runtime(PolicyRuntime):
                 is_motion=True,
             )
             self.publish_current_action()
-            if self._record is not None:
-                row = [frame, time.monotonic()]
-                row.extend(np.asarray(qpos[int(cursor)], np.float32).tolist())     # raw plan
-                row.extend(np.asarray(reference[int(cursor)], np.float32).tolist())  # tape
-                row.extend(np.asarray(action, np.float32).reshape(-1).tolist())    # tracker action
-                for key in ("joint_pos", "joint_vel"):
-                    row.extend(np.asarray(state[key], np.float32).reshape(-1)[:29].tolist())
-                row.extend(np.asarray(state["root_quat_wxyz"], np.float32).reshape(-1)[:4].tolist())
-                row.extend(np.asarray(state["gyro"], np.float32).reshape(-1)[:3].tolist())
-                delta_max, decision = 0.0, 0
-                if correction is not None:
-                    base = qpos[correction.start: correction.start + ACTION_FRAMES, 7:36]
-                    delta_max = float(np.max(np.abs(correction.joints_g1 - base)))
-                    decision = 1
-                row.extend([delta_max, decision])
-                row.extend([(t1 - t0) * 1000.0, (t2 - t1) * 1000.0, (t2a - t2) * 1000.0,
-                            (t3 - t2a) * 1000.0, (t4 - t3) * 1000.0])
-                self._record.writerow(row)
-                self._record_file.flush()
+            if self.recorder is not None:
+                self._configure_recorder()
+                self.recorder.frame(
+                    frame=frame,
+                    t=time.monotonic(),
+                    action=action,
+                    q=state["joint_pos"],
+                    dq=state["joint_vel"],
+                    tau=self._tau,
+                    quat=state["root_quat_wxyz"],
+                    gyro=state["gyro"],
+                    residual=self.corrector is not None,
+                    read_ms=(t1 - t0) * 1000.0,
+                    tick_ms=(t2 - t1) * 1000.0,
+                    encode_ms=(t2a - t2) * 1000.0,
+                    consume_ms=(t3 - t2a) * 1000.0,
+                    step_ms=(t4 - t3) * 1000.0,
+                )
             if frame % 50 == 0:
                 try:
                     pdo = self.port._policy_dof_order()
@@ -340,27 +380,14 @@ class Native50Runtime(PolicyRuntime):
                     )
                 except Exception:  # noqa: BLE001 - diagnostics must not stop motion
                     pass
-            if frame < 4:
-                self.port.get_logger().info(
-                    "tick frame=%d total=%.1fms budget=%.0fms "
-                    "read=%.1f tick=%.1f encode=%.1f consume=%.1f step=%.1f"
-                    % (
-                        frame,
-                        (time.monotonic() - target) * 1000.0,
-                        slack * 1000.0,
-                        (t1 - t0) * 1000.0,
-                        (t2 - t1) * 1000.0,
-                        (t2a - t2) * 1000.0,
-                        (t3 - t2a) * 1000.0,
-                        (t4 - t3) * 1000.0,
-                    )
-                )
         except Exception as error:  # noqa: BLE001 - stop at the robot callback boundary
             self.stop(str(error))
 
     def close(self):
         if self.active or self.pending is not None:
             self.stop("Policy process shutting down")
+        if self.recorder is not None:
+            self.recorder.close()
         self.pool.shutdown(wait=True, cancel_futures=True)
 
 
