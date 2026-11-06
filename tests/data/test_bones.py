@@ -120,3 +120,23 @@ def test_publication_requires_complete_compressed_source(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="archive SHA256"):
         bones_prepare.prepare(archive, md, tmp_path / "corrupt")
     assert not (tmp_path / "corrupt" / "manifest.json").exists()
+
+
+def test_stats_use_only_full_train_windows(tmp_path):
+    from omg.cli.data.bones_stats import compute
+    from omg.data.bones import encode_bones_window
+
+    rng = np.random.default_rng(42)
+    poses = rng.normal(size=(250, 36)).astype("<f4")
+    poses[:, 3:7] /= np.linalg.norm(poses[:, 3:7], axis=1, keepdims=True)
+    poses.tofile(tmp_path / "qpos.f32")
+    (tmp_path / "manifest.json").write_text(json.dumps(dict(format="bones-g1-native50-v1", fps=50, frames=250)))
+    (tmp_path / "captions.json").write_text('["step"]')
+    pd.DataFrame(dict(clip_id=["a", "b"], split=["train", "val"], offset=[0, 125],
+                      frames=[125, 125], caption_ids=[[0]*4, [0]*4])).to_parquet(tmp_path / "clips.parquet")
+    stats = compute(tmp_path, stride=5, batch_size=2)
+    full = torch.stack([torch.from_numpy(poses[i:i+110]) for i in (0, 5, 10, 15)])
+    expected = encode_bones_window(full, 10, torch.zeros(38), torch.ones(38)).double()
+    assert stats["windows"] == 4 and stats["split"] == "train"
+    torch.testing.assert_close(torch.tensor(stats["std"], dtype=torch.float64), expected.std(dim=(0, 1), unbiased=False))
+    torch.testing.assert_close(torch.tensor(stats["mean"], dtype=torch.float64), expected.mean(dim=(0, 1)))

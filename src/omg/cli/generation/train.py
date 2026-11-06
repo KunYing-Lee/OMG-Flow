@@ -119,14 +119,21 @@ def main():
     data_cfg = dict(history=cfg["history"], horizon=cfg["horizon"])
     train = BonesWindows(args.data, "train", stride=cfg["train_stride"], **data_cfg)
     val = BonesWindows(args.data, "val", stride=cfg["eval_stride"], **data_cfg)
-    stats_path = repo_root() / "assets/stats/g1_38d_50hz_hist10_stats.json"
+    stats_path = args.data / "train_stats.json"
     stats = json.loads(stats_path.read_text())
+    manifest_sha = hashlib.sha256((args.data / "manifest.json").read_bytes()).hexdigest()
+    if (stats["format"], stats["split"], stats["fps"], stats["history"], stats["horizon"], stats["manifest_sha256"]) != (
+        "bones-native38-stats-v1", "train", 50, cfg["history"], cfg["horizon"], manifest_sha
+    ):
+        raise ValueError("Native38 statistics must match this dataset, history and horizon")
     mean = torch.tensor(stats["mean"], device=device)
-    std = torch.tensor(stats["std"], device=device).clamp_min(1e-6)
+    std = torch.tensor(stats["std"], device=device)
+    if mean.shape != (38,) or std.shape != (38,) or not torch.isfinite(mean).all() or not torch.isfinite(std).all() or not (std > 0).all():
+        raise ValueError("Native38 statistics require 38 finite means and positive finite scales")
     flow = MotionFlow(**cfg["model"]).to(device)
     model = DistributedDataParallel(flow, device_ids=[device.index] if gpu else None) if world > 1 else flow
     optim = torch.optim.AdamW(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"], fused=gpu)
-    provenance = dict(manifest_sha256=hashlib.sha256((args.data / "manifest.json").read_bytes()).hexdigest(),
+    provenance = dict(manifest_sha256=manifest_sha,
                       text_manifest_sha256=cache.signature, stats_sha256=hashlib.sha256(stats_path.read_bytes()).hexdigest(),
                       world_size=world, device=args.device)
     start, best = 0, float("inf")

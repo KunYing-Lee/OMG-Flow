@@ -6,7 +6,7 @@ OMG-Flow generates 50 Hz Unitree G1 reference motion conditioned on text, ten fr
 
 A training window consists of ten observed frames followed by a 100-frame plan. For each example, sample a committed length uniformly from 0 through 50 inclusive. The first P future frames are clean conditioning tokens, identified by a binary mask and endpoint time 1. The remaining frames follow the straight conditional flow path from Gaussian noise to the normalized pose. The transformer regresses its velocity on the suffix alone. Each example contributes its mean loss over editable coordinates. A deterministic Euler solver integrates only those coordinates. This adapts the clean-prefix formulation in [HALO’s trainer](https://github.com/apple-aiml-research/ml-halo/blob/35d8334e9f7dc3e2b7a7737a9a3ec34f170c809f/generator/training/trainer.py).
 
-Training starts from random weights. Positions, rotations and joint angles use the coordinate system anchored to the last history frame, and the fixed OMG-Lite 50 Hz training-set means and scales. The model sees frozen T5-base token embeddings for the corresponding Bones-Seed clip. The four source descriptions supply caption variants.
+Training starts from random weights. Positions, rotations and joint angles use the coordinate system anchored to the last history frame, and are standardized using Bones-Seed training actors alone. The model sees frozen T5-base token embeddings for the corresponding Bones-Seed clip. The four source descriptions supply caption variants.
 
 ## Prepare Bones-Seed
 
@@ -18,6 +18,7 @@ From the repository root with the training and data dependencies installed:
 export PYTHONPATH=src
 python -m omg.data.bones_prepare --archive /data/source/g1.tar.gz \
   --metadata /data/source/seed_metadata_v004.parquet --root /data/bones
+python -m omg.cli.data.bones_stats --data /data/bones
 python -m omg.cli.data.cache_bones_text --data /data/bones --output /data/bones-text \
   --t5 /models/t5-base --device cuda
 ```
@@ -35,7 +36,9 @@ make train TRAIN_ARGS='--resume --stop-after 16'
 make train TRAIN_ARGS=--resume
 ```
 
-The first command trains four ranks to step 12, checks held-out losses and conditional samples, and writes a checkpoint. The second restores optimizer state and advances to step 16 with the full-run learning-rate schedule. The third continues to the configured step count. The preset is in `configs/flow/bones.yaml`. A scratch pilot can also use a conversion with `--limit` and an independent output directory. Full pretraining checks the manifest's completeness. Metrics are appended to `metrics.jsonl`. Atomic `latest.pt` and `best.pt` contain parameters, optimizer state, normalization, step and run provenance.
+For a dedicated four-GPU allocation, `scripts/train_bones.sh` verifies the packed files and caption cache, runs the two pilot stages, and proceeds automatically when both succeed. Set `BONES_DATA`, `BONES_TEXT_CACHE` and `FLOW_OUTPUT` to the paths mounted in that allocation.
+
+The smoke target trains four ranks to step 12, checks held-out losses and conditional samples, and writes a checkpoint. The second restores optimizer state and advances to step 16 with the full-run learning-rate schedule. The third continues to the configured step count. The preset is in `configs/flow/bones.yaml`. A scratch pilot can also use a conversion with `--limit` and an independent output directory. Full pretraining checks the manifest's completeness. Metrics are appended to `metrics.jsonl`. Atomic `latest.pt` and `best.pt` contain parameters, optimizer state, normalization, step and run provenance.
 
 ## Continue an exposed reference
 
