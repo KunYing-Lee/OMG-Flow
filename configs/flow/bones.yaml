@@ -3,7 +3,7 @@ history: 10
 horizon: 100
 train_stride: 1
 eval_stride: 25
-batch_size: 128
+batch_size: 256
 workers: 2
 steps: 50000
 warmup: 250

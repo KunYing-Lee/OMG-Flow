@@ -8,6 +8,17 @@ A training window consists of ten observed frames followed by a 100-frame plan. 
 
 Training starts from random weights. Positions, rotations and joint angles use the coordinate system anchored to the last history frame, and are standardized using Bones-Seed training actors alone. The model sees frozen T5-base token embeddings for the corresponding Bones-Seed clip. The four source descriptions supply caption variants.
 
+## Install
+
+Use `uv` from a fresh Linux checkout to install the training dependencies for your GPU.
+
+| GPU | Command | Runtime |
+| --- | --- | --- |
+| H200 | `make venv && make install INSTALL_EXTRAS=train,data,dev` | Python 3.10, PyTorch 2.6.0 with CUDA 12.4 |
+| RTX 5090 | `make venv VENV_PYTHON=3.11 && make install-blackwell` | Python 3.11, PyTorch 2.8.0 with CUDA 12.8 and native `sm_120` support, NumPy 2.4.6, PyArrow 22.0.0 |
+
+Activate the selected environment with `source .venv/bin/activate` before running the commands below. The default `make install` includes the deployment and rendering extras.
+
 ## Prepare Bones-Seed
 
 Use an account with access to the [Bones Studio release](https://huggingface.co/datasets/bones-studio/seed). The converter expects the official G1 archive and v004 metadata at revision `2f59b2077b9da34dd4e43618e705c7cb962c9a66`. The code checks both source hashes. It reads CSV columns by joint name, converts cm to m and degrees to radians, and resamples from 120 to 50 Hz with quaternion SLERP for root orientation. Each actor and all their mirrors belong to one split. Validation and test each hold out 26 actors; these are project-defined splits. A window requires 110 real frames from one clip. The manifest records byte hashes, counts and split membership summaries.
