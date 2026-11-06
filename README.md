@@ -51,6 +51,8 @@ For a dedicated four-GPU allocation, `scripts/train_bones.sh` verifies the packe
 
 The smoke target trains four ranks to step 12, checks held-out losses and conditional samples, and writes a checkpoint. The second restores optimizer state and advances to step 16 with the full-run learning-rate schedule. The third continues to the configured step count. The preset is in `configs/flow/bones.yaml`. A scratch pilot can also use a conversion with `--limit` and an independent output directory. Full pretraining checks the manifest's completeness. Metrics are appended to `metrics.jsonl`. Atomic `latest.pt` and `best.pt` contain parameters, optimizer state, normalization, step and run provenance.
 
+The measured batch sweep, prefix ablation and checkpoint checks are recorded in [Flow validation](docs/flow-validation.md).
+
 ## Continue an exposed reference
 
 ```python
