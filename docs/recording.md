@@ -37,8 +37,12 @@ python deployment/native50_policy_node.py ... --record /workspace/logs/run-<ts>
 ```
 
 Files appear as `run-<ts>.frames.csv`, `run-<ts>.plans.npz`, `run-<ts>.decisions.npz`,
-`run-<ts>.meta.json`. The CSV is flushed per row; plans/decisions are rewritten on each
-event, so a killed process still leaves usable data.
+`run-<ts>.meta.json`. The CSV is flushed per row. Plans/decisions are appended in
+memory and written by a background writer thread; the 50 Hz path only appends and
+sets an event. Writes go to a sibling temp file and are atomically replaced, so a
+reader never sees a partial npz. A SIGKILL can lose events not yet flushed; a normal
+stop calls `close()` and writes the final npz. A writer failure is recorded as
+`writer_error` in `meta.json` and does not stop the control loop.
 
 ## Cost
 
@@ -46,7 +50,11 @@ event, so a killed process still leaves usable data.
 - plans: 100×36 floats compressed ≈ 6 KB per plan → at 0.5 s switch ≈ **12 KB/s**;
 - decisions: 25×29 floats compressed ≈ 4 KB per decision → ≈ **8 KB/s**;
 - writer overhead: one `csv.writer` call + `flush` per frame (no fsync), expected
-  well under 0.5 ms/frame; **not yet measured on the robot**.
+  well under 0.5 ms/frame. Plan/decision compression is on the writer thread, **not**
+  in the 50 Hz loop. 2026-11-06 frontv1 measured `encode` spikes of 4.2–8.8 ms at
+  plan accepts before this change (growing with the number of stored plans; 10 ms at
+  plan 8), which caused a 20.8 ms stop. After the change the event path is ~0.2 ms
+  for 16 events even with a deliberately 50 ms compressor.
 
 `scripts/capture_lowstate.py` remains useful as an independent `/lowstate` capture
 (`q/dq/tau` + IMU) and for velocity-mode segments before B.

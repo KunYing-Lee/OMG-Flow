@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import csv
 import json
+import os
+import threading
 import time
 from pathlib import Path
 
@@ -64,8 +66,23 @@ class Recorder:
 
         self._plans: list[dict] = []
         self._decisions: list[dict] = []
-        self._save_plans()
-        self._save_decisions()
+        self._lock = threading.Lock()
+        self._dirty = threading.Event()
+        self._stop = threading.Event()
+        self._closed = False
+        self._written_plans = 0
+        self._written_decisions = 0
+        self._writer_error = None
+
+        # The control loop only appends + sets an event.  Compression and the
+        # O(n) rewrite of plans/decisions happen on a writer thread, so a plan
+        # accept cannot consume the 20 ms tracker budget.
+        self._write_plans([])
+        self._write_decisions([])
+        self._writer = threading.Thread(
+            target=self._writer_loop, name="omg-recorder-writer", daemon=True
+        )
+        self._writer.start()
 
     # -- metadata ---------------------------------------------------------
     def update_meta(self, **fields) -> None:
@@ -82,66 +99,92 @@ class Recorder:
         latency = None
         if request_time is not None and accept_time is not None:
             latency = float((accept_time - request_time) * 1000.0)
-        self._plans.append(dict(
-            plan_id=int(plan_id), request_frame=int(request_frame),
-            accept_frame=int(accept_frame), switch_frame=int(switch_frame),
-            deadline_frame=int(deadline_frame), request_time=request_time,
-            accept_time=accept_time, latency_ms=latency, block=block,
-        ))
-        self._save_plans()
+        with self._lock:
+            self._plans.append(dict(
+                plan_id=int(plan_id), request_frame=int(request_frame),
+                accept_frame=int(accept_frame), switch_frame=int(switch_frame),
+                deadline_frame=int(deadline_frame), request_time=request_time,
+                accept_time=accept_time, latency_ms=latency, block=block,
+            ))
+        self._dirty.set()
 
-    def _save_plans(self) -> None:
-        if not self._plans:
-            np.savez_compressed(
-                self.plans_path,
+    def _write_plans(self, plans: list[dict]) -> None:
+        if not plans:
+            arrays = dict(
                 plan_id=np.zeros(0, np.int64), request_frame=np.zeros(0, np.int64),
                 accept_frame=np.zeros(0, np.int64), switch_frame=np.zeros(0, np.int64),
                 deadline_frame=np.zeros(0, np.int64), request_time=np.zeros(0, np.float64),
                 accept_time=np.zeros(0, np.float64), latency_ms=np.zeros(0, np.float64),
                 blocks=np.zeros((0, 0, 36), np.float32),
             )
-            return
-        np.savez_compressed(
-            self.plans_path,
-            plan_id=np.array([p["plan_id"] for p in self._plans], np.int64),
-            request_frame=np.array([p["request_frame"] for p in self._plans], np.int64),
-            accept_frame=np.array([p["accept_frame"] for p in self._plans], np.int64),
-            switch_frame=np.array([p["switch_frame"] for p in self._plans], np.int64),
-            deadline_frame=np.array([p["deadline_frame"] for p in self._plans], np.int64),
-            request_time=np.array([p["request_time"] if p["request_time"] is not None else np.nan
-                                   for p in self._plans], np.float64),
-            accept_time=np.array([p["accept_time"] if p["accept_time"] is not None else np.nan
-                                  for p in self._plans], np.float64),
-            latency_ms=np.array([p["latency_ms"] if p["latency_ms"] is not None else np.nan
-                                 for p in self._plans], np.float64),
-            blocks=np.stack([p["block"] for p in self._plans]),
-        )
+        else:
+            arrays = dict(
+                plan_id=np.array([p["plan_id"] for p in plans], np.int64),
+                request_frame=np.array([p["request_frame"] for p in plans], np.int64),
+                accept_frame=np.array([p["accept_frame"] for p in plans], np.int64),
+                switch_frame=np.array([p["switch_frame"] for p in plans], np.int64),
+                deadline_frame=np.array([p["deadline_frame"] for p in plans], np.int64),
+                request_time=np.array([p["request_time"] if p["request_time"] is not None else np.nan
+                                       for p in plans], np.float64),
+                accept_time=np.array([p["accept_time"] if p["accept_time"] is not None else np.nan
+                                      for p in plans], np.float64),
+                latency_ms=np.array([p["latency_ms"] if p["latency_ms"] is not None else np.nan
+                                     for p in plans], np.float64),
+                blocks=np.stack([p["block"] for p in plans]),
+            )
+        self._atomic_savez(self.plans_path, arrays)
+
+    def _atomic_savez(self, path: Path, arrays: dict) -> None:
+        """Write to a sibling temp file, then replace; readers never see a partial npz."""
+        tmp = path.with_name(path.name + ".tmp")
+        with open(tmp, "wb") as handle:
+            np.savez_compressed(handle, **arrays)
+        os.replace(tmp, path)
 
     # -- M2 events --------------------------------------------------------
     def decision(self, *, frame, start, delta, latent_norm=None) -> None:
         delta = np.asarray(delta, dtype=np.float32)
-        self._decisions.append(dict(
-            frame=int(frame), start=int(start), delta=delta,
-            latent_norm=None if latent_norm is None else float(latent_norm),
-        ))
-        self._save_decisions()
+        with self._lock:
+            self._decisions.append(dict(
+                frame=int(frame), start=int(start), delta=delta,
+                latent_norm=None if latent_norm is None else float(latent_norm),
+            ))
+        self._dirty.set()
 
-    def _save_decisions(self) -> None:
-        if not self._decisions:
-            np.savez_compressed(
-                self.decisions_path,
+    def _write_decisions(self, decisions: list[dict]) -> None:
+        if not decisions:
+            arrays = dict(
                 frame=np.zeros(0, np.int64), start=np.zeros(0, np.int64),
                 latent_norm=np.zeros(0, np.float64), delta=np.zeros((0, 0, 29), np.float32),
             )
-            return
-        np.savez_compressed(
-            self.decisions_path,
-            frame=np.array([d["frame"] for d in self._decisions], np.int64),
-            start=np.array([d["start"] for d in self._decisions], np.int64),
-            latent_norm=np.array([np.nan if d["latent_norm"] is None else d["latent_norm"]
-                                  for d in self._decisions], np.float64),
-            delta=np.stack([d["delta"] for d in self._decisions]),
-        )
+        else:
+            arrays = dict(
+                frame=np.array([d["frame"] for d in decisions], np.int64),
+                start=np.array([d["start"] for d in decisions], np.int64),
+                latent_norm=np.array([np.nan if d["latent_norm"] is None else d["latent_norm"]
+                                      for d in decisions], np.float64),
+                delta=np.stack([d["delta"] for d in decisions]),
+            )
+        self._atomic_savez(self.decisions_path, arrays)
+
+    def _writer_loop(self) -> None:
+        while not self._stop.is_set():
+            self._dirty.wait(0.1)
+            if self._stop.is_set():
+                break
+            self._dirty.clear()
+            with self._lock:
+                plans = list(self._plans)
+                decisions = list(self._decisions)
+            try:
+                if len(plans) != self._written_plans:
+                    self._write_plans(plans)
+                    self._written_plans = len(plans)
+                if len(decisions) != self._written_decisions:
+                    self._write_decisions(decisions)
+                    self._written_decisions = len(decisions)
+            except Exception as error:  # noqa: BLE001 - recording must not kill control
+                self._writer_error = error
 
     # -- per-frame --------------------------------------------------------
     def frame(self, *, frame, t, action, q, dq, tau, quat, gyro, residual,
@@ -162,10 +205,25 @@ class Recorder:
         self._frames += 1
 
     def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        self._stop.set()
+        self._dirty.set()
+        self._writer.join()
+        with self._lock:
+            plans = list(self._plans)
+            decisions = list(self._decisions)
         try:
-            self._frame_file.close()
+            self._write_plans(plans)
+            self._write_decisions(decisions)
+        except Exception as error:  # noqa: BLE001 - keep the shutdown path alive
+            self._writer_error = error
         finally:
-            self._save_plans()
-            self._save_decisions()
-            self.update_meta(frames=self._frames,
-                             plans=len(self._plans), decisions=len(self._decisions))
+            self._frame_file.close()
+            self.update_meta(
+                frames=self._frames,
+                plans=len(plans),
+                decisions=len(decisions),
+                writer_error=None if self._writer_error is None else repr(self._writer_error),
+            )
