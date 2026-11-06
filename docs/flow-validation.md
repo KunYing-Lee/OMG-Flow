@@ -21,7 +21,7 @@ Each pilot used the same ten-layer, width-512 transformer and frozen T5 tokens. 
 | 384 | 1,536 | 8,960 | 97.8% | 14.98 |
 | 512 | 2,048 | 8,704 | 98.2% | 19.59 |
 
-The long-run preset uses 256 per GPU, the fastest measured batch. The extended run targets 100,000 updates with 250 warm-up steps and 50 Hz native38 output.
+The long-run preset uses 256 per GPU, the fastest measured batch. The extended run targets 200,000 updates with 250 warm-up steps and 50 Hz native38 output.
 
 ## Prefix conditioning
 
