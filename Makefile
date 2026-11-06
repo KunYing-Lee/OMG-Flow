@@ -4,11 +4,7 @@ PYTHONPATH := src
 TORCH_INDEX_URL ?= https://download.pytorch.org/whl/cu124
 PYPI_INDEX_URL ?=
 PIP_INDEX_ARGS := $(if $(PYPI_INDEX_URL),--index-url $(PYPI_INDEX_URL),)
-EXP ?= 100m
-DATA ?= omg_data_50hz_cached
-TRAINER ?= 1gpu
-
-.PHONY: venv install install-cn install-dev compile compose smoke test
+.PHONY: venv install install-cn install-dev compile train smoke test
 
 venv:
 	$(UV) venv --python 3.10 .venv
@@ -26,11 +22,18 @@ install-dev: install
 compile:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall src tests
 
-compose:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m omg.cli.generation.train exp=$(EXP) data=$(DATA) logger=none --cfg job
+FLOW_DEVICES ?= 4
+FLOW_DATA ?= data/bones
+FLOW_TEXT_CACHE ?= data/bones-text
+FLOW_OUTPUT ?= outputs/bones-flow
+FLOW_ARGS := --data "$(FLOW_DATA)" --text-cache "$(FLOW_TEXT_CACHE)" --output "$(FLOW_OUTPUT)"
+FLOW_TRAIN := PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m torch.distributed.run --standalone --nproc_per_node=$(FLOW_DEVICES) -m omg.cli.generation.train
+
+train:
+	$(FLOW_TRAIN) $(FLOW_ARGS) $(TRAIN_ARGS)
 
 smoke:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m omg.cli.generation.train exp=$(EXP) data=$(DATA) logger=none trainer=$(TRAINER) data.limit_each_trainset=2 trainer.max_steps=2 trainer.limit_val_batches=0 trainer.num_sanity_val_steps=0
+	$(FLOW_TRAIN) $(FLOW_ARGS) --stop-after 12 $(TRAIN_ARGS)
 
 test:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m pytest -q

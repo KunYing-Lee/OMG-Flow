@@ -1,115 +1,52 @@
-<div align="center">
-  <h1>OMG-Lite</h1>
-  <p>Native 50 Hz · 38D Motion Space · Streamlined Deployment</p>
-  <p>
-    Built on <a href="https://github.com/Tsinghua-MARS-Lab/OMG">OMG: Omni-Modal Motion Generation for Generalist Humanoid Control</a>.
-  </p>
-  <p>
-    <a href="https://github.com/Tsinghua-MARS-Lab/OMG"><img src="https://img.shields.io/badge/GitHub-Original_OMG-181717?logo=github" alt="Original OMG"></a>
-    <a href="https://tsinghua-mars-lab.github.io/OMG/"><img src="https://img.shields.io/badge/Website-Page-Green" alt="Project Page"></a>
-    <a href="https://huggingface.co/THU-MARS/OMG/tree/main/checkpoints/38D"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-38D-FFD21E" alt="38D Checkpoint"></a>
-    <a href="docs/realtime_g1.md"><img src="https://img.shields.io/badge/Docs-Deployment-007EC6" alt="Deployment"></a>
-  </p>
-</div>
+# OMG-Flow
 
-OMG-Lite adapts OMG for **native 50 Hz** humanoid motion
-in a **38D pose space**, with an optimized generation–tracking deployment pipeline.
+OMG-Flow generates 50 Hz Unitree G1 reference motion conditioned on text, ten frames of history, and the future frames already promised to a tracker. It uses the native38 pose representation and transformer blocks from [OMG-Lite](https://github.com/KunYing-Lee/OMG-Lite/commit/1ab545f74be5a0f1470af269fa96d64b27c6066c), derived from [OMG](https://github.com/Tsinghua-MARS-Lab/OMG). Upstream MIT licensing and history are retained.
 
-- **Native 50 Hz:** generate and track at the same rate, without runtime interpolation.
-- **38D poses:** compact motion representation with matching training statistics.
-- **Shared sync/async pipeline:** fixed-time plan switching, ten-frame tracker
-  preview, and a separate async planner process.
+## What is learned
 
-<table>
-  <tr>
-    <td align="center" width="33%"><img src="docs/media/squat.gif" alt="Squat down and stand up" width="100%"><br>Squat down and stand up</td>
-    <td align="center" width="33%"><img src="docs/media/arms_side.gif" alt="Raise both arms sideways" width="100%"><br>Raise both arms sideways</td>
-    <td align="center" width="33%"><img src="docs/media/backward.gif" alt="Walk backward" width="100%"><br>Walk backward</td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><img src="docs/media/side_left.gif" alt="Take steps to the left" width="100%"><br>Take steps to the left</td>
-    <td align="center" width="33%"><img src="docs/media/punch.gif" alt="Throw alternating punches" width="100%"><br>Throw alternating punches</td>
-    <td align="center" width="33%"><img src="docs/media/dance.gif" alt="Dance" width="100%"><br>Dance</td>
-  </tr>
-</table>
+A training window consists of ten observed frames followed by a 100-frame plan. For each example, sample a committed length uniformly from 0 through 50 inclusive. The first P future frames are clean conditioning tokens, identified by a binary mask and endpoint time 1. The remaining frames follow the straight conditional flow path from Gaussian noise to the normalized pose. The transformer regresses its velocity on the suffix alone. Each example contributes its mean loss over editable coordinates. A deterministic Euler solver integrates only those coordinates. This adapts the clean-prefix formulation in [HALO’s trainer](https://github.com/apple-aiml-research/ml-halo/blob/35d8334e9f7dc3e2b7a7737a9a3ec34f170c809f/generator/training/trainer.py).
 
-## 1. Install
+Training starts from random weights. Positions, rotations and joint angles use the coordinate system anchored to the last history frame, and the fixed OMG-Lite 50 Hz training-set means and scales. The model sees frozen T5-base token embeddings for the corresponding Bones-Seed clip. The four source descriptions supply caption variants.
 
-```bash
-git clone https://github.com/KunYing-Lee/OMG-Lite.git
-cd OMG-Lite
-make venv
-source .venv/bin/activate
-make install
+## Prepare Bones-Seed
+
+Use an account with access to the [Bones Studio release](https://huggingface.co/datasets/bones-studio/seed). The converter expects the official G1 archive and v004 metadata at revision `2f59b2077b9da34dd4e43618e705c7cb962c9a66`. The code checks both source hashes. It reads CSV columns by joint name, converts cm to m and degrees to radians, and resamples from 120 to 50 Hz with quaternion SLERP for root orientation. Each actor and all their mirrors belong to one split. Validation and test each hold out 26 actors; these are project-defined splits. A window requires 110 real frames from one clip. The manifest records byte hashes, counts and split membership summaries.
+
+From the repository root with the training and data dependencies installed:
+
+```sh
 export PYTHONPATH=src
+python -m omg.data.bones_prepare --archive /data/source/g1.tar.gz \
+  --metadata /data/source/seed_metadata_v004.parquet --root /data/bones
+python -m omg.cli.data.cache_bones_text --data /data/bones --output /data/bones-text \
+  --t5 /models/t5-base --device cuda
 ```
 
-Use `make install-cn` for China mainland networks.
-See [Installation](docs/installation.md) for dependencies.
+The text cache is built once from [the pinned T5-base snapshot](https://huggingface.co/google-t5/t5-base/tree/a9723ea7f1b39c1eae772870f3b547bf6ef7e6c1). Only the model, data index and cache are needed in the training loop.
 
-## 2. Download and Generate
+## Validate and train
 
-Download the [38D / 50 Hz inference bundle](https://huggingface.co/THU-MARS/OMG/tree/main/checkpoints/38D):
-
-```bash
-python - <<'PY'
-from huggingface_hub import snapshot_download
-snapshot_download("THU-MARS/OMG", allow_patterns=["checkpoints/38D/*"], local_dir="hf-artifacts")
-PY
-python hf-artifacts/checkpoints/38D/infer.py \
-  --text 'walk forward' --output outputs/walk.npz
+```sh
+export PYTHONPATH=src
+python -m pytest -q tests/data/test_bones.py tests/generation/test_flow*.py
+export FLOW_DATA=/data/bones FLOW_TEXT_CACHE=/data/bones-text FLOW_OUTPUT=/runs/bones-flow
+make smoke
+make train TRAIN_ARGS='--resume --stop-after 16'
+make train TRAIN_ARGS=--resume
 ```
 
-The bundle includes checkpoint, config, statistics and seed motion. First use
-loads T5-base; no dataset or tracker is needed. See [Artifacts](docs/artifacts.md).
+The first command trains four ranks to step 12, checks held-out losses and conditional samples, and writes a checkpoint. The second restores optimizer state and advances to step 16 with the full-run learning-rate schedule. The third continues to the configured step count. The preset is in `configs/flow/bones.yaml`. A scratch pilot can also use a conversion with `--limit` and an independent output directory. Full pretraining checks the manifest's completeness. Metrics are appended to `metrics.jsonl`. Atomic `latest.pt` and `best.pt` contain parameters, optimizer state, normalization, step and run provenance.
 
-## 3. Train
+## Continue an exposed reference
 
-Prepare [THU-MARS/OMG-Lite-Data and the compact cache](docs/data/multimodal_50hz.md), then run:
+```python
+from omg.generation.flow_reference import FlowReferenceGenerator
 
-```bash
-python -m torch.distributed.run --standalone --nproc_per_node=8 \
-  -m omg.cli.generation.train exp=multimodal_50hz
+generator = FlowReferenceGenerator.from_checkpoint(checkpoint_path, device="cuda")
+suffix = generator.generate_suffix(
+    history_qpos, committed_qpos, gaussian_noise,
+    steps=10, text_tokens=t5_tokens, text_mask=t5_mask,
+)
 ```
 
-The default predicts 100 frames from 10 history frames, using sinusoidal history
-encoding and Q/K normalization. The public-data preset enables text, audio and human
-reference with separate full-training-window stats. `exp=base` retains the historical
-text-only protocol; see [Training](docs/training_50hz.md).
-
-## 4. Simulate
-
-Download [HoloMotion](https://github.com/HorizonRobotics/HoloMotion) tracking
-artifacts separately. With the inference bundle above:
-
-```bash
-export OMG38_ARTIFACT_DIR="$PWD/hf-artifacts/checkpoints/38D"
-python -m omg.cli.pipeline.main \
-  --config "$OMG38_ARTIFACT_DIR/config.yaml" \
-  --checkpoint "$OMG38_ARTIFACT_DIR/sstep=075500.ckpt" \
-  --seed-motion "$OMG38_ARTIFACT_DIR/seed_stand.npz" \
-  --tracker /path/to/model_16200_dynamic_batch.onnx \
-  --text 'walk forward' --mode sync --frames 500 --output outputs/walk
-```
-
-Use `--mode async` for wall-clock execution. Both modes retain 50 DDIM steps and
-CFG 2.5. `--switch-seconds` defaults to 1.0 and supports 0.5–2.0 seconds.
-See [Generation](docs/generation.md) and [Benchmarks](docs/benchmark.md).
-
-## 5. Deploy on G1
-
-Run generation on the GPU host and tracking on Orin. The planner server defaults
-to **DDIM20 + DiT cache, TensorRT FP16, CFG batch2**. The default pipeline
-requests at frame 25 using raw frames 40–49, then switches at frame 50.
-Tracker preview requires a reply within **280 ms**.
-
-See [G1 Deployment](docs/realtime_g1.md) for setup and validation.
-**The robot adapters are experimental; full shadow and physical acceptance remain pending.**
-
-## Acknowledgements
-
-Based on [OMG](https://github.com/Tsinghua-MARS-Lab/OMG), with motion tracking
-from [HoloMotion](https://github.com/HorizonRobotics/HoloMotion).
-The released inference bundle remains hosted in the upstream OMG model repository.
-
-[MIT License](LICENSE)
+Inputs are world qpos36 in xyz, wxyz and the OMG G1 joint order. Pass the ten frames immediately preceding the committed prefix. The explicit Gaussian tensor is always shaped `[batch, 100, 38]`. At P=25 the result contains 75 new world-space poses; the caller keeps the original 25 poses in its buffer. The same noise and conditioning reproduce a plan in evaluation mode. Tests cover a second plan made after the history anchor moves. Physical tracking and the quality of the first new frame require separate evaluation. The inherited diffusion reference trainer is available at `omg.cli.generation.train_diffusion`; OMG-Flow checkpoints use the flow generator above.

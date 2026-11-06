@@ -3,7 +3,7 @@ from __future__ import annotations
 from omegaconf import OmegaConf
 from pytorch_lightning.callbacks import LearningRateMonitor
 
-from omg.cli.generation.train import _callbacks
+from omg.cli.generation.train_diffusion import _callbacks
 
 
 def test_callbacks_skip_logger_dependent_callbacks_without_logger() -> None:

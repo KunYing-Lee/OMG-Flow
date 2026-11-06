@@ -36,3 +36,8 @@ deploy-env/
 experiments/
 *.bak*
 __pycache__/
+
+# BONES-SEED and derived training artifacts stay outside git.
+/data/
+/scratch/
+*.safetensors

@@ -1,223 +1,220 @@
+"""Train the Bones-Seed committed-prefix generator using torchrun."""
 from __future__ import annotations
 
+import argparse
+import hashlib
+import json
+import math
 import os
-import sys
+import subprocess
 import time
 from pathlib import Path
-from typing import Any
 
-import hydra
-import pytorch_lightning as pl
 import torch
-from hydra.utils import instantiate
-from omegaconf import DictConfig, OmegaConf
+import torch.distributed as dist
+import yaml
+from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data import DataLoader
 
-from omg.core.logging import Log
-
-
-_CKPT_PATH_OVERRIDE_KEYS = {"ckpt_path", "init_weights_only_ckpt"}
-
-
-def _quote_checkpoint_path_overrides(argv: list[str]) -> list[str]:
-    # Hydra treats unquoted "=" in override values as grammar, but checkpoint filenames often contain it.
-    quoted: list[str] = []
-    for arg in argv:
-        if "=" not in arg or arg.startswith("-"):
-            quoted.append(arg)
-            continue
-        key, value = arg.split("=", 1)
-        normalized_key = key.lstrip("+")
-        if normalized_key not in _CKPT_PATH_OVERRIDE_KEYS or not value:
-            quoted.append(arg)
-            continue
-        if value[0] in {"'", '"'}:
-            quoted.append(arg)
-            continue
-        escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-        quoted.append(f'{key}="{escaped}"')
-    return quoted
+from omg.core.paths import repo_root
+from omg.data.bones import BonesWindows, encode_bones_window
+from omg.generation.bones_text import BonesTextCache
+from omg.generation.flow import MotionFlow
+from omg.generation.flow_reference import FlowReferenceGenerator
+from omg.generation.flow_seam import replan_seam_metrics
 
 
-def _prepare_argv_for_hydra() -> None:
-    sys.argv = _quote_checkpoint_path_overrides(sys.argv)
+def batches(num_windows, batch_size, start, stop, seed, rank, world):
+    """Step-addressable uniform draws with replacement, independent on each rank."""
+    generator = torch.Generator()
+    for step in range(start, stop):
+        generator.manual_seed(seed + step * world + rank)
+        yield torch.randint(num_windows, (batch_size,), generator=generator).tolist()
 
 
-def _callbacks(cfg: DictConfig, *, logger_enabled: bool):
-    callbacks = []
-    if "callbacks" not in cfg or cfg.callbacks is None:
-        return callbacks
-    for _, cb_cfg in cfg.callbacks.items():
-        if cb_cfg is not None and "_target_" in cb_cfg:
-            resolved = OmegaConf.create(OmegaConf.to_container(cb_cfg, resolve=True))
-            requires_logger = bool(resolved.pop("requires_logger", False))
-            if requires_logger and not logger_enabled:
-                continue
-            callbacks.append(instantiate(resolved))
-    return callbacks
+class WindowBatches:
+    def __init__(self, dataset, cache):
+        self.dataset = dataset
+        self.cache = cache
+
+    def __getitem__(self, indices):
+        batch = self.dataset.get_batch(indices)
+        text, mask = self.cache.lookup(batch["text"])
+        return batch["qpos"], text, mask
 
 
-def _trainer_plugins(cfg: DictConfig):
-    plugins = []
-    checkpoint_io = cfg.get("checkpoint_io")
-    if checkpoint_io is not None and "_target_" in checkpoint_io:
-        plugins.append(instantiate(checkpoint_io))
-    return plugins
+@torch.inference_mode()
+def evaluate(flow, dataset, cfg, mean, std, rank, world, device):
+    # Reuse identical windows, Gaussian draws and times at every checkpoint.
+    count = min(len(dataset.dataset), cfg["val_windows"])
+    count -= count % world
+    if count < world:
+        raise ValueError("Need at least one distinct validation window per rank")
+    ids = torch.randperm(len(dataset.dataset), generator=torch.Generator().manual_seed(271828))[:count][rank::world]
+    generator = torch.Generator(device=device).manual_seed(314159 + rank)
+    past, horizon = cfg["history"], cfg["horizon"]
+    prefixes = sorted({0, min(25, horizon - 1), min(cfg["model"]["max_prefix_length"], horizon - 1)})
+    reference_model = FlowReferenceGenerator(flow, past, horizon, mean, std)
+    metrics = {}
+    for offset in range(0, len(ids), 16):
+        raw, text, mask = dataset[ids[offset:offset+16]]
+        poses = encode_bones_window(raw.to(device), past, mean, std)
+        history, future = poses[:, :past], poses[:, past:]
+        kwargs = {"text_tokens": text.to(device), "text_mask": mask.to(device)}
+        noise = torch.randn(future.shape, device=device, generator=generator)
+        times = torch.rand(len(future), device=device, generator=generator)
+        if offset == 0:
+            replan_noise = torch.randn(future.shape, device=device, generator=generator)
+            metrics.update(replan_seam_metrics(reference_model, raw.to(device), noise, replan_noise,
+                                               steps=cfg["sample_steps"], **kwargs))
+        for prefix in prefixes:
+            lengths = torch.full((len(future),), prefix, device=device, dtype=torch.long)
+            loss = flow(history, future, prefix_lengths=lengths, time=times, noise=noise, **kwargs)
+            name = f"flow_mse_p{prefix}"
+            metrics[name] = metrics.get(name, 0) + loss * len(future)
+            if offset == 0:
+                plan = flow.sample(history, future[:, :prefix], horizon, steps=cfg["sample_steps"], noise=noise, **kwargs)
+                if not torch.equal(plan[:, :prefix], future[:, :prefix]) or not torch.isfinite(plan).all():
+                    raise RuntimeError("Non-finite generated plan or modified committed prefix")
+                delta = (plan[:, prefix:] - future[:, prefix:]) * std
+                metrics[f"sample_joint_mae_rad_p{prefix}"] = delta[:, :, 9:].abs().mean()
+                metrics[f"sample_root_l2_m_p{prefix}"] = delta[:, :, :3].norm(dim=-1).mean()
+    vec = torch.stack([value / len(ids) if key.startswith("flow_mse_") else value for key, value in metrics.items()])
+    if world > 1:
+        dist.all_reduce(vec)
+        vec /= world
+    if not torch.isfinite(vec).all():
+        raise RuntimeError("Non-finite held-out metrics")
+    return dict(zip(metrics, vec.tolist()))
 
 
-def _trainer_config(cfg: DictConfig, datamodule) -> dict:
-    trainer_cfg = OmegaConf.to_container(cfg.trainer, resolve=True)
-    if getattr(datamodule, "train_sampler", None) is not None and "use_distributed_sampler" not in trainer_cfg:
-        trainer_cfg["use_distributed_sampler"] = False
-        Log.info("[Trainer]: disabled Lightning distributed sampler replacement for custom train sampler")
-    return trainer_cfg
-
-
-def _load_weights_only_checkpoint(
-    model: pl.LightningModule,
-    checkpoint_path: str | os.PathLike[str],
-    *,
-    strict: bool = True,
-) -> None:
-    path = Path(checkpoint_path)
-    checkpoint: Any = torch.load(path, map_location="cpu")
-    if not isinstance(checkpoint, dict) or "state_dict" not in checkpoint:
-        raise ValueError(f"Weights-only checkpoint does not contain a Lightning state_dict: {path}")
-    state_dict = checkpoint["state_dict"]
-    adapted_mismatched: list[str] = []
-    skipped_mismatched: list[str] = []
-    if not bool(strict):
-        current_state = model.state_dict()
-        filtered_state = {}
-        for key, value in state_dict.items():
-            current_value = current_state.get(key)
-            if current_value is not None and tuple(current_value.shape) != tuple(value.shape):
-                detail = f"{key}: checkpoint={tuple(value.shape)} model={tuple(current_value.shape)}"
-                if value.ndim != current_value.ndim:
-                    skipped_mismatched.append(detail)
-                    continue
-                adapted = current_value.clone()
-                overlap = tuple(
-                    slice(0, min(int(checkpoint_size), int(model_size)))
-                    for checkpoint_size, model_size in zip(value.shape, current_value.shape, strict=True)
-                )
-                adapted[overlap] = value[overlap].to(device=adapted.device, dtype=adapted.dtype)
-                filtered_state[key] = adapted
-                adapted_mismatched.append(detail)
-                continue
-            filtered_state[key] = value
-        state_dict = filtered_state
-    missing, unexpected = model.load_state_dict(state_dict, strict=bool(strict))
-    if bool(strict) and (missing or unexpected):
-        raise RuntimeError(
-            f"Failed to load weights-only checkpoint strictly from {path}: "
-            f"missing={missing}, unexpected={unexpected}"
-        )
-    if missing or unexpected or adapted_mismatched or skipped_mismatched:
-        Log.info(
-            "[Checkpoint]: initialized model weights non-strictly from %s missing=%s unexpected=%s "
-            "adapted_mismatched=%s skipped_mismatched=%s",
-            path,
-            missing,
-            unexpected,
-            adapted_mismatched,
-            skipped_mismatched,
-        )
-    else:
-        Log.info("[Checkpoint]: initialized model weights from %s", path)
-
-
-def _log_stage(stage: str, start: float | None = None) -> float:
-    now = time.perf_counter()
-    if start is None:
-        Log.info("[TrainStage] %s:start", stage)
-    else:
-        Log.info("[TrainStage] %s:done elapsed_sec=%.3f", stage, now - start)
-    return now
-
-
-def run(cfg: DictConfig) -> None:
-    Log.info("Resolved config:\n%s", OmegaConf.to_yaml(cfg, resolve=True))
-    stage_start = _log_stage("seed")
-    pl.seed_everything(int(cfg.seed), workers=True)
-    _log_stage("seed", stage_start)
-    Path(cfg.output_dir).mkdir(parents=True, exist_ok=True)
-
-    stage_start = _log_stage("instantiate_datamodule")
-    datamodule = instantiate(cfg.data, _recursive_=False)
-    Log.info("[TrainStage] instantiate_datamodule:class=%s", type(datamodule).__name__)
-    _log_stage("instantiate_datamodule", stage_start)
-
-    stage_start = _log_stage("instantiate_model")
-    model = instantiate(cfg.model)
-    Log.info("[TrainStage] instantiate_model:class=%s", type(model).__name__)
-    Log.info(
-        "[INFO] 🧭 CONDITION_INJECTION=%s (training; model.frame_cond_injection=%s)",
-        getattr(model, "frame_cond_injection", None),
-        getattr(model, "frame_cond_injection", None),
-    )
-    _log_stage("instantiate_model", stage_start)
-
-    init_weights_only_ckpt = cfg.get("init_weights_only_ckpt")
-    if init_weights_only_ckpt:
-        if cfg.get("ckpt_path"):
-            raise ValueError("Use either ckpt_path for full resume or init_weights_only_ckpt for weight initialization, not both")
-        stage_start = _log_stage("load_weights_only_checkpoint")
-        _load_weights_only_checkpoint(
-            model,
-            init_weights_only_ckpt,
-            strict=bool(cfg.get("init_weights_strict", True)),
-        )
-        _log_stage("load_weights_only_checkpoint", stage_start)
-
-    logger = False
-    if cfg.get("logger", {}).get("enabled", False):
-        stage_start = _log_stage("instantiate_logger")
-        logger_cfg = OmegaConf.create(OmegaConf.to_container(cfg.logger, resolve=True))
-        logger_cfg.pop("enabled", None)
-        logger = instantiate(logger_cfg)
-        Log.info("[TrainStage] instantiate_logger:class=%s", type(logger).__name__)
-        _log_stage("instantiate_logger", stage_start)
-
-    stage_start = _log_stage("build_trainer_config")
-    trainer_cfg = _trainer_config(cfg, datamodule)
-    plugins = _trainer_plugins(cfg)
-    if plugins:
-        existing_plugins = trainer_cfg.pop("plugins", None)
-        if existing_plugins is None:
-            trainer_cfg["plugins"] = plugins
-        elif isinstance(existing_plugins, list):
-            trainer_cfg["plugins"] = [*existing_plugins, *plugins]
-        else:
-            trainer_cfg["plugins"] = [existing_plugins, *plugins]
-    _log_stage("build_trainer_config", stage_start)
-
-    stage_start = _log_stage("instantiate_callbacks")
-    callbacks = _callbacks(cfg, logger_enabled=logger is not False)
-    Log.info("[TrainStage] instantiate_callbacks:classes=%s", [type(callback).__name__ for callback in callbacks])
-    _log_stage("instantiate_callbacks", stage_start)
-
-    stage_start = _log_stage("instantiate_trainer")
-    trainer = pl.Trainer(callbacks=callbacks, logger=logger, default_root_dir=cfg.output_dir, **trainer_cfg)
-    _log_stage("instantiate_trainer", stage_start)
-
-    if cfg.task == "fit":
-        stage_start = _log_stage("trainer_fit")
-        trainer.fit(model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
-        _log_stage("trainer_fit", stage_start)
-    elif cfg.task == "validate":
-        stage_start = _log_stage("trainer_validate")
-        trainer.validate(model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
-        _log_stage("trainer_validate", stage_start)
-    else:
-        raise ValueError(f"Unsupported task: {cfg.task}")
-
-
-@hydra.main(version_base="1.3", config_path="../../../../configs/generation", config_name="train")
-def main(cfg: DictConfig) -> None:
-    run(cfg)
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
+    parser.add_argument("--config", type=Path, default=repo_root() / "configs/flow/bones.yaml")
+    parser.add_argument("--data", type=Path, required=True)
+    parser.add_argument("--text-cache", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--resume", action="store_true", help="Restore latest.pt and continue at its next update")
+    parser.add_argument("--stop-after", type=int, help="Absolute pilot stop; preserves the full-run LR schedule")
+    args = parser.parse_args()
+    cfg = yaml.safe_load(args.config.read_text())
+    rank, world = int(os.environ.get("RANK", 0)), int(os.environ.get("WORLD_SIZE", 1))
+    gpu = args.device == "cuda"
+    device = torch.device("cuda", int(os.environ.get("LOCAL_RANK", 0))) if gpu else torch.device("cpu")
+    if gpu:
+        torch.cuda.set_device(device)
+    if world > 1:
+        dist.init_process_group("nccl" if gpu else "gloo")
+    torch.manual_seed(cfg["seed"])
+    torch.set_float32_matmul_precision("high")
+    args.output.mkdir(exist_ok=True, parents=True)
+    last = args.output / "latest.pt"
+    if last.exists() and not args.resume:
+        raise FileExistsError(f"Existing run at {args.output}; pass --resume to continue")
+    manifest = json.loads((args.data / "manifest.json").read_text())
+    if not manifest["complete"] and args.stop_after is None:
+        raise ValueError("Full pretraining requires a complete BONES-SEED conversion")
+    cache = BonesTextCache(args.text_cache)
+    data_cfg = dict(history=cfg["history"], horizon=cfg["horizon"])
+    train = BonesWindows(args.data, "train", stride=cfg["train_stride"], **data_cfg)
+    val = BonesWindows(args.data, "val", stride=cfg["eval_stride"], **data_cfg)
+    stats_path = repo_root() / "assets/stats/g1_38d_50hz_hist10_stats.json"
+    stats = json.loads(stats_path.read_text())
+    mean = torch.tensor(stats["mean"], device=device)
+    std = torch.tensor(stats["std"], device=device).clamp_min(1e-6)
+    flow = MotionFlow(**cfg["model"]).to(device)
+    model = DistributedDataParallel(flow, device_ids=[device.index] if gpu else None) if world > 1 else flow
+    optim = torch.optim.AdamW(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"], fused=gpu)
+    provenance = dict(manifest_sha256=hashlib.sha256((args.data / "manifest.json").read_bytes()).hexdigest(),
+                      text_manifest_sha256=cache.signature, stats_sha256=hashlib.sha256(stats_path.read_bytes()).hexdigest(),
+                      world_size=world, device=args.device)
+    start, best = 0, float("inf")
+    if args.resume:
+        checkpoint = torch.load(last, map_location="cpu", weights_only=True)
+        if checkpoint["config"] != cfg or checkpoint["provenance"] != provenance:
+            raise ValueError("Cannot resume with different data, configuration or world size")
+        flow.load_state_dict(checkpoint["model"])
+        optim.load_state_dict(checkpoint["optimizer"])
+        start, best = checkpoint["step"], checkpoint["best_validation"]
+        del checkpoint
+    stop = cfg["steps"] if args.stop_after is None else args.stop_after
+    if not start < stop <= cfg["steps"]:
+        raise ValueError(f"Require {start} < stop <= {cfg['steps']}, got {stop}")
+    batch_size = cfg["batch_size"]
+    loader = DataLoader(WindowBatches(train, cache), batch_size=None,
+                        sampler=batches(len(train), batch_size, start, stop, cfg["seed"], rank, world),
+                        num_workers=cfg["workers"], pin_memory=gpu)
+    validation = WindowBatches(val, cache)
+    def log(event, **values):
+        if rank == 0:
+            row = json.dumps(dict(event=event, time=time.time(), **values), allow_nan=False)
+            print(row, flush=True)
+            with (args.output / "metrics.jsonl").open("a") as file:
+                file.write(row + "\n")
+    source = subprocess.run(["git", "-C", str(repo_root()), "rev-parse", "HEAD"], capture_output=True, text=True)
+    revision = os.environ.get("OMG_FLOW_REVISION") or source.stdout.strip()
+    log("start", start=start, stop=stop, source_revision=revision, train_windows=len(train), val_windows=len(val),
+        trainable=sum(p.numel() for p in flow.parameters()), config=cfg, provenance=provenance)
+    clock, logged_step = time.perf_counter(), start
+    for step, (qpos, text, mask) in enumerate(loader, start + 1):
+        # Replaying this update uses the same dropout, prefix length, time and noise.
+        torch.manual_seed(cfg["seed"] + step * world + rank)
+        poses = encode_bones_window(qpos.to(device, non_blocking=True), cfg["history"], mean, std)
+        history, future = poses[:, :cfg["history"]], poses[:, cfg["history"]:]
+        warm = cfg["warmup"]
+        lr = (cfg["lr"] * step / warm if step <= warm else
+              cfg["min_lr"] + 0.5 * (cfg["lr"] - cfg["min_lr"]) *
+              (1 + math.cos(math.pi * (step - warm) / (cfg["steps"] - warm))))
+        optim.param_groups[0]["lr"] = lr
+        optim.zero_grad(set_to_none=True)
+        with torch.autocast(device.type, torch.bfloat16, enabled=gpu):
+            loss = model(history, future, text_tokens=text.to(device, non_blocking=True), text_mask=mask.to(device, non_blocking=True))
+        loss.backward()
+        grad = torch.nn.utils.clip_grad_norm_(model.parameters(), cfg["grad_clip"], error_if_nonfinite=True)
+        optim.step()
+        if step == start + 1 or step % cfg["log_every"] == 0 or step == stop:
+            reduced = loss.detach().clone()
+            if world > 1:
+                dist.all_reduce(reduced)
+            reduced = reduced.item() / world
+            now = time.perf_counter()
+            log("train", step=step, loss=reduced, grad_norm=grad.item(), lr=lr,
+                windows_per_sec=(step-logged_step)*batch_size*world / (now-clock),
+                peak_gpu_gib=torch.cuda.max_memory_allocated(device)/2**30 if gpu else None)
+            clock, logged_step = now, step
+        validating = step % cfg["eval_every"] == 0 or step == stop
+        improved = False
+        if validating:
+            flow.eval()
+            with torch.autocast(device.type, torch.bfloat16, enabled=gpu):
+                metrics = evaluate(flow, validation, cfg, mean, std, rank, world, device)
+            flow.train()
+            losses = [value for key, value in metrics.items() if key.startswith("flow_mse_")]
+            score = sum(losses) / len(losses)
+            improved = score < best
+            best = min(score, best)
+            log("val", step=step, **metrics)
+        if step % cfg["save_every"] == 0 or validating:
+            if rank == 0:
+                payload = dict(model=flow.state_dict(), optimizer=optim.state_dict(), step=step, best_validation=best,
+                               config=cfg, model_config=cfg["model"], mean=mean.cpu(), std=std.cpu(), provenance=provenance,
+                               source_revision=revision)
+                tmp = last.with_suffix(".tmp")
+                torch.save(payload, tmp)
+                tmp.replace(last)
+                if improved:
+                    # A hard link keeps the best copy without rewriting the optimizer.
+                    tmp = args.output / "best.tmp"
+                    tmp.unlink(missing_ok=True)
+                    os.link(last, tmp)
+                    tmp.replace(args.output / "best.pt")
+                log("checkpoint", step=step, bytes=last.stat().st_size, best=improved)
+            if world > 1:
+                dist.barrier()
+    if world > 1:
+        dist.destroy_process_group()
 
 
 if __name__ == "__main__":
-    os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
-    _prepare_argv_for_hydra()
     main()

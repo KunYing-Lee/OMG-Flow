@@ -20,6 +20,20 @@ from omg.utils.rotation_conversions import (
 )
 
 
+def heading_quaternions(root_quat: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    root_quat = F.normalize(root_quat, dim=-1)
+    root_quat = standardize_quaternion(root_quat)
+    root_rot = quaternion_to_matrix(root_quat)
+    yaw = torch.atan2(root_rot[..., 1, 0], root_rot[..., 0, 0])
+    axis_angle = torch.zeros(*yaw.shape, 3, device=root_quat.device, dtype=root_quat.dtype)
+    axis_angle[..., 2] = yaw
+    heading_quat = axis_angle_to_quaternion(axis_angle)
+    heading_quat = F.normalize(heading_quat, dim=-1)
+    heading_quat = standardize_quaternion(heading_quat)
+    heading_quat_inv = quaternion_invert(heading_quat)
+    return heading_quat, heading_quat_inv
+
+
 @dataclass
 class MotionComponents:
     root_pos_local: torch.Tensor
@@ -89,19 +103,6 @@ class G1MotionFeatureCodec:
     def _standardize_quat(self, quat: torch.Tensor) -> torch.Tensor:
         return standardize_quaternion(F.normalize(quat, dim=-1))
 
-    def _build_heading_quat(self, root_quat: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        root_quat = F.normalize(root_quat, dim=-1)
-        root_quat = standardize_quaternion(root_quat)
-        root_rot = quaternion_to_matrix(root_quat)
-        yaw = torch.atan2(root_rot[..., 1, 0], root_rot[..., 0, 0])
-        axis_angle = torch.zeros(*yaw.shape, 3, device=root_quat.device, dtype=root_quat.dtype)
-        axis_angle[..., 2] = yaw
-        heading_quat = axis_angle_to_quaternion(axis_angle)
-        heading_quat = F.normalize(heading_quat, dim=-1)
-        heading_quat = standardize_quaternion(heading_quat)
-        heading_quat_inv = quaternion_invert(heading_quat)
-        return heading_quat, heading_quat_inv
-
     def _canonical_anchor(
         self,
         anchor_root_pos: torch.Tensor,
@@ -113,7 +114,7 @@ class G1MotionFeatureCodec:
             anchor_root_quat = anchor_root_quat.unsqueeze(-2)
         anchor_root_quat = F.normalize(anchor_root_quat, dim=-1)
         anchor_root_quat = standardize_quaternion(anchor_root_quat)
-        heading_quat, heading_quat_inv = self._build_heading_quat(anchor_root_quat)
+        heading_quat, heading_quat_inv = heading_quaternions(anchor_root_quat)
         return anchor_root_pos, heading_quat, heading_quat_inv
 
     def rotation_quat_to_features(self, quat: torch.Tensor) -> torch.Tensor:

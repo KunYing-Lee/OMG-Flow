@@ -1,0 +1,27 @@
+# One update uses batch_size * world_size independent, uniformly drawn real windows.
+history: 10
+horizon: 100
+train_stride: 1
+eval_stride: 25
+batch_size: 128
+workers: 2
+steps: 50000
+warmup: 250
+lr: 0.0001
+min_lr: 0.000001
+weight_decay: 0.01
+grad_clip: 1.0
+seed: 1234
+log_every: 10
+eval_every: 500
+save_every: 250
+val_windows: 256
+sample_steps: 10
+model:
+  feature_dim: 38
+  hidden_dim: 512
+  num_layers: 10
+  num_heads: 8
+  dropout: 0.1
+  text_dim: 768
+  max_prefix_length: 50

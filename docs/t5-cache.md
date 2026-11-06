@@ -3,7 +3,7 @@
 Opt in with:
 
 ```bash
-python -m omg.cli.generation.train exp=base \
+python -m omg.cli.generation.train_diffusion exp=base \
   model.text_encoder.frozen_eval=true \
   model.text_encoder.cache_max_entries=4096 \
   model.text_encoder.cache_device=encoder

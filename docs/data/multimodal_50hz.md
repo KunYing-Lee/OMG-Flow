@@ -48,7 +48,7 @@ python -m omg.cli.generation.compute_stats \
   --split train --device cuda --batch-size 1024 \
   --output "$OMG_LITE_MULTIMODAL_STATS"
 python -m torch.distributed.run --standalone --nproc_per_node=8 \
-  -m omg.cli.generation.train exp=multimodal_50hz
+  -m omg.cli.generation.train_diffusion exp=multimodal_50hz
 ```
 
 The new preset enables audio and human reference, retains 38D/50Hz and diffusion-only

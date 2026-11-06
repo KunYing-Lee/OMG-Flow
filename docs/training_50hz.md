@@ -22,7 +22,7 @@ export OMG_MATERIALIZED_ROOT=/path/to/prepared/cache
 export OMG50_STATS_PATH=/path/to/g1_38d_50hz_hist10_stats.json
 export OMG_MODELS_ROOT=/path/to/models  # contains t5-base-local
 PYTHONPATH=src python -m torch.distributed.run --standalone --nproc_per_node=8 \
-  -m omg.cli.generation.train exp=base
+  -m omg.cli.generation.train_diffusion exp=base
 ```
 
 Use `--cfg job --resolve` to inspect the resolved Hydra configuration before

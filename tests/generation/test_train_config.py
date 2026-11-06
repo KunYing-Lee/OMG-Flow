@@ -7,7 +7,7 @@ import pytest
 from hydra import compose, initialize_config_dir
 from omegaconf import OmegaConf
 
-from omg.cli.generation.train import _trainer_config
+from omg.cli.generation.train_diffusion import _trainer_config
 
 
 GENERATION_CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs" / "generation"

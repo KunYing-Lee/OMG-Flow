@@ -5,7 +5,7 @@ Prepare the [50 Hz data/cache](data.md) and T5-base under
 
 ```bash
 python -m torch.distributed.run --standalone --nproc_per_node=8 \
-  -m omg.cli.generation.train exp=base
+  -m omg.cli.generation.train_diffusion exp=base
 ```
 
 See [training protocol](training_50hz.md) for batch size, learning rate and
