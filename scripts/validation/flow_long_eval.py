@@ -20,6 +20,7 @@ def main():
     track.add_argument('--onnx', required=True)
     render = commands.add_parser('render')
     render.add_argument('--out', required=True)
+    render.add_argument('--with-gt', action='store_true')
     render.add_argument('--render-cases', type=int, nargs='+', default=[0,3,6,9,12,15])
     args = parser.parse_args()
     out = Path(args.out)
@@ -149,24 +150,38 @@ def main():
         for i in args.render_cases:
             arrays=[np.load(out/'best_reference.npy')[i],np.load(out/'latest_reference.npy')[i],
                     np.load(out/f'best_executed_{i}.npy'),np.load(out/f'latest_executed_{i}.npy')]
-            path=out/f"{manifest['cases'][i]['category']}_comparison.mp4"
+            titles=['190.5k reference','200k reference','190.5k physics replay','200k physics replay']
+            columns=2
+            if args.with_gt:
+                arrays=[np.load(out/f'gt_{i}.npy'), *arrays[:2],
+                        np.load(out/f'gt_executed_{i}.npy'), *arrays[2:]]
+                titles=['GT reference','190.5k reference','200k reference',
+                        'GT physics replay','190.5k physics replay','200k physics replay']
+                columns=3
+            suffix='gt_comparison' if args.with_gt else 'comparison'
+            path=out/f"{manifest['cases'][i]['category']}_{suffix}.mp4"
             writer=imageio.get_writer(path,fps=25,codec='libx264',quality=7,macro_block_size=1)
             for frame in range(0,1000,2):
                 panels=[]
-                for panel, (arr,title) in enumerate(zip(arrays,['190.5k reference','200k reference','190.5k physics replay','200k physics replay'])):
-                    set_g1_qpos(model,data,handles,arr[frame])
-                    mujoco.mj_forward(model,data)
-                    anchor=arrays[panel % 2][frame]
-                    camera.lookat[:]=[anchor[0],anchor[1],.85]
-                    renderer.update_scene(data,camera)
-                    rgb=renderer.render().copy()
+                for panel, (arr,title) in enumerate(zip(arrays,titles)):
+                    available=frame < len(arr)
+                    if available:
+                        set_g1_qpos(model,data,handles,arr[frame])
+                        mujoco.mj_forward(model,data)
+                        anchor=arrays[panel % columns][frame]
+                        camera.lookat[:]=[anchor[0],anchor[1],.85]
+                        renderer.update_scene(data,camera)
+                        rgb=renderer.render().copy()
+                    else:
+                        rgb=np.full((360,480,3),235,dtype=np.uint8)
+                        cv2.putText(rgb,f'Clip ended at {len(arr)/50:.2f}s',(30,180),cv2.FONT_HERSHEY_SIMPLEX,.65,(50,50,50),2)
                     cv2.putText(rgb,title,(10,25),cv2.FONT_HERSHEY_SIMPLEX,.58,(20,20,20),2)
                     cv2.putText(rgb,f't={frame/50:.2f}s | seed 1234',(10,50),cv2.FONT_HERSHEY_SIMPLEX,.5,(20,20,20),1)
-                    if panel >= 2:
+                    if panel >= columns and available:
                         error=np.linalg.norm(arr[frame,:3]-anchor[:3])
                         cv2.putText(rgb,f'root error: {error:.2f} m',(10,75),cv2.FONT_HERSHEY_SIMPLEX,.5,(160,20,20),1)
                     panels.append(rgb)
-                writer.append_data(np.concatenate([np.concatenate(panels[:2],axis=1),np.concatenate(panels[2:],axis=1)],axis=0))
+                writer.append_data(np.concatenate([np.concatenate(panels[:columns],axis=1),np.concatenate(panels[columns:],axis=1)],axis=0))
             writer.close()
             print(path,flush=True)
         renderer.close()

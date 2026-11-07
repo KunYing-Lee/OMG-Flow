@@ -64,3 +64,7 @@ Run stage `track` with `--out`, `--onnx`, and `MUJOCO_GL=disable`. Run stage `re
 Existing Flow/prefix regression checks: 11 passed. All 36 generated outputs were finite, with unit root quaternions; all committed buffers were retained exactly. Generation used Torch 2.8.0+cu128; physics used MuJoCo 3.3.7 and ONNX Runtime 1.23.2. Videos are pose re-renderings on local MuJoCo 3.16.0; physical integration results come solely from the recorded remote 3.3.7 rollouts.
 
 The next diagnostic should focus on the source of root-velocity/position tracking mismatch in the moving references, with the existing tracker and initialization held fixed. Simply increasing training steps is not justified by this comparison.
+
+## GT-inclusive videos
+
+Render with `render --out <artifacts> --with-gt`. The six `*_gt_comparison.mp4` videos and `index_gt.html` add GT as the left column, best in the middle, and final on the right. Upper row: references; lower row: corresponding physics replay. All columns start immediately after the same ten observed mocap frames. GT is the unmodified held-out source future, not a nearest-neighbor match to the generated result. Shorter source clips become labeled end cards rather than repeated or frozen poses. GT replay ends eleven frames before the available reference to reserve preview and derivative samples. The independently generated futures are not expected to reconstruct the specific GT future frame by frame.
