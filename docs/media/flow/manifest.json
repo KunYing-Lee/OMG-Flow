@@ -1,0 +1,105 @@
+{
+  "selection": "190.5k only; lowest mean root tracking error among three evaluated seeds per displayed category",
+  "rendering": "MuJoCo pose rendering of recorded physics execution, no trajectory edits",
+  "clips": [
+    {
+      "name": "dance",
+      "case": {
+        "category": "dance",
+        "clip_id": "dancing_routine_opt_2_001__A039",
+        "caption": "person performs four reps of a complex dance choreography in one place",
+        "seed": 2345,
+        "offset": 49805043,
+        "frames": 1241
+      },
+      "metrics": {
+        "label": "best",
+        "case": 7,
+        "category": "dance",
+        "seed": 2345,
+        "seconds": 20.0,
+        "first_failure_s": null,
+        "pelvis_min_m": 0.6956959366798401,
+        "joint_mae_rad": 0.061615850776433945,
+        "root_error_m": 0.050322357565164566,
+        "reference_joint_accel_mean": 16.046112060546875,
+        "seam_joint_accel_mean": 15.145140647888184,
+        "reference_root_height_min": 0.7058629989624023,
+        "reference_root_height_max": 0.7965432405471802,
+        "final_root_displacement_m": 0.024746740236878395
+      },
+      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+      "source_sha256": "18775bf58bbaebbe6aeed7daddc404a477143d75348e16774f2c83e98aea4616",
+      "preview_start_s": 4,
+      "preview_duration_s": 8,
+      "full_duration_s": 20,
+      "playback_speed": 1
+    },
+    {
+      "name": "turn",
+      "case": {
+        "category": "turn",
+        "clip_id": "idle_turn_090_R_long_002__A549",
+        "caption": "individual in a neutral position makes a 90 degree turn to their left, stops, then repeats whole action many times",
+        "seed": 1234,
+        "offset": 23894478,
+        "frames": 3629
+      },
+      "metrics": {
+        "label": "best",
+        "case": 15,
+        "category": "turn",
+        "seed": 1234,
+        "seconds": 20.0,
+        "first_failure_s": null,
+        "pelvis_min_m": 0.7712336182594299,
+        "joint_mae_rad": 0.06953877955675125,
+        "root_error_m": 0.0719938650727272,
+        "reference_joint_accel_mean": 13.259525299072266,
+        "seam_joint_accel_mean": 12.157273292541504,
+        "reference_root_height_min": 0.7660945057868958,
+        "reference_root_height_max": 0.7852722406387329,
+        "final_root_displacement_m": 0.0835818350315094
+      },
+      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+      "source_sha256": "095f6c3c006adb6436dd220d86cd9df245012cf31adc703c6a2b777b665090dc",
+      "preview_start_s": 0,
+      "preview_duration_s": 8,
+      "full_duration_s": 20,
+      "playback_speed": 1
+    },
+    {
+      "name": "jump",
+      "case": {
+        "category": "jump",
+        "clip_id": "reach_jump_R_002__A217",
+        "caption": "a jump reaching upwards as high as possible",
+        "seed": 1234,
+        "offset": 4064345,
+        "frames": 717
+      },
+      "metrics": {
+        "label": "best",
+        "case": 12,
+        "category": "jump",
+        "seed": 1234,
+        "seconds": 20.0,
+        "first_failure_s": null,
+        "pelvis_min_m": 0.6607229709625244,
+        "joint_mae_rad": 0.0730743333697319,
+        "root_error_m": 0.143033966422081,
+        "reference_joint_accel_mean": 16.903573989868164,
+        "seam_joint_accel_mean": 14.25909423828125,
+        "reference_root_height_min": 0.6531980633735657,
+        "reference_root_height_max": 1.0298435688018799,
+        "final_root_displacement_m": 0.031978145241737366
+      },
+      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+      "source_sha256": "19019e5059fe02faa3ad8a3e987cf8e66f66766057372cc43ee508d5a9523c57",
+      "preview_start_s": 0,
+      "preview_duration_s": 8,
+      "full_duration_s": 20,
+      "playback_speed": 1
+    }
+  ]
+}
