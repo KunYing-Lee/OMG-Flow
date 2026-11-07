@@ -27,9 +27,9 @@ in a **38D pose space**, using flow matching to continue an already committed re
     <td align="center" width="33%"><a href="docs/media/flow/jump.mp4"><img src="docs/media/flow/jump.gif" alt="Generated upward reach tracked in simulation" width="100%"></a><br>Upward reach</td>
   </tr>
   <tr>
-    <td align="center" width="33%"><a href="docs/media/flow/walk.mp4"><img src="docs/media/flow/walk.gif" alt="Walking" width="100%"></a><br>Walking</td>
+    <td align="center" width="33%"><a href="docs/media/flow/energetic_dance.mp4"><img src="docs/media/flow/energetic_dance.gif" alt="Energetic dance" width="100%"></a><br>Energetic dance</td>
     <td align="center" width="33%"><a href="docs/media/flow/run.mp4"><img src="docs/media/flow/run.gif" alt="Backward movement" width="100%"></a><br>Backward movement</td>
-    <td align="center" width="33%"><a href="docs/media/flow/kick.mp4"><img src="docs/media/flow/kick.gif" alt="Stepping and kicking" width="100%"></a><br>Stepping and kicking</td>
+    <td align="center" width="33%"><a href="docs/media/flow/crouch_rebound.mp4"><img src="docs/media/flow/crouch_rebound.gif" alt="Crouch and rebound" width="100%"></a><br>Crouch and rebound</td>
   </tr>
 </table>
 
