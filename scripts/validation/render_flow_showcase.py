@@ -5,7 +5,6 @@ import hashlib
 import json
 from pathlib import Path
 
-import cv2
 import imageio.v2 as imageio
 import mujoco
 import numpy as np
@@ -34,7 +33,14 @@ c.elevation = -15
 manifest = json.loads((src / "manifest.json").read_text())
 metrics = json.loads((src / "tracking.json").read_text())
 records = []
-for name, i in [("dance", 7), ("turn", 15), ("jump", 12)]:
+for name, i in [
+    ("dance", 7),
+    ("turn", 15),
+    ("jump", 12),
+    ("walk", 2),
+    ("run", 3),
+    ("kick", 11),
+]:
     q = np.load(src / f"best_executed_{i}.npy")
     case = manifest["cases"][i]
     metric = next(x for x in metrics if x["label"] == "best" and x["case"] == i)
@@ -47,29 +53,6 @@ for name, i in [("dance", 7), ("turn", 15), ("jump", 12)]:
         c.lookat[:] = [q[t, 0], q[t, 1], 0.85]
         r.update_scene(d, c)
         im = r.render().copy()
-        cv2.rectangle(im, (0, 0), (640, 64), (244, 246, 248), -1)
-        cv2.putText(
-            im,
-            {
-                "dance": "Dance choreography",
-                "turn": "Repeated turns",
-                "jump": "Upward reach",
-            }[name],
-            (18, 26),
-            0,
-            0.7,
-            (25, 35, 45),
-            2,
-        )
-        cv2.putText(
-            im,
-            f"Flow 190.5k | HoloMotion simulation | {t / 50:05.2f}s",
-            (18, 51),
-            0,
-            0.43,
-            (65, 75, 85),
-            1,
-        )
         writer.append_data(im)
     writer.close()
     peak = int(np.argmax(q[:, 2]))

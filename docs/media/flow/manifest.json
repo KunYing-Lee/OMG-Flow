@@ -100,6 +100,105 @@
       "preview_duration_s": 8,
       "full_duration_s": 20,
       "playback_speed": 1
+    },
+    {
+      "name": "walk",
+      "case": {
+        "category": "walk",
+        "clip_id": "injured_torso_grab_walk_ff_180_002__A549",
+        "caption": "walk forward, lean down to pick up an object, then continue the walk",
+        "seed": 3456,
+        "offset": 23540057,
+        "frames": 1454
+      },
+      "metrics": {
+        "label": "best",
+        "case": 2,
+        "category": "walk",
+        "seed": 3456,
+        "seconds": 20.0,
+        "first_failure_s": null,
+        "pelvis_min_m": 0.7405349612236023,
+        "joint_mae_rad": 0.0610211156308651,
+        "root_error_m": 0.17238494753837585,
+        "reference_joint_accel_mean": 16.58118438720703,
+        "seam_joint_accel_mean": 14.519742012023926,
+        "reference_root_height_min": 0.7425005435943604,
+        "reference_root_height_max": 0.7886907458305359,
+        "final_root_displacement_m": 7.700913429260254
+      },
+      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+      "source_sha256": "f45c8143635c1e3c61564f33412388a3246523e00fc6546c1581590a059f5b0b",
+      "preview_start_s": 0,
+      "preview_duration_s": 8,
+      "full_duration_s": 20,
+      "playback_speed": 1
+    },
+    {
+      "name": "run",
+      "case": {
+        "category": "run",
+        "clip_id": "wave_right_hand_000_R_talking_with_child_jog_ff_start_360_R_001__A479",
+        "caption": "character waves back over left shoulder and talks with a child then starts to run backwards",
+        "seed": 1234,
+        "offset": 26895160,
+        "frames": 531
+      },
+      "metrics": {
+        "label": "best",
+        "case": 3,
+        "category": "run",
+        "seed": 1234,
+        "seconds": 20.0,
+        "first_failure_s": null,
+        "pelvis_min_m": 0.6871261596679688,
+        "joint_mae_rad": 0.06391679495573044,
+        "root_error_m": 0.5695499777793884,
+        "reference_joint_accel_mean": 20.327106475830078,
+        "seam_joint_accel_mean": 19.018465042114258,
+        "reference_root_height_min": 0.6773546934127808,
+        "reference_root_height_max": 0.7810474634170532,
+        "final_root_displacement_m": 4.790163993835449
+      },
+      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+      "source_sha256": "f5341a4dc1e4ff88e678e98757d65c215286d10b2485420aa0f7ce90776a0f3c",
+      "preview_start_s": 0,
+      "preview_duration_s": 8,
+      "full_duration_s": 20,
+      "playback_speed": 1
+    },
+    {
+      "name": "kick",
+      "case": {
+        "category": "kick",
+        "clip_id": "injured_torso_kick_trash_R_002__A217",
+        "caption": "individual with an injured torso kicks an item on the ground and then takes three steps",
+        "seed": 3456,
+        "offset": 3818759,
+        "frames": 469
+      },
+      "metrics": {
+        "label": "best",
+        "case": 11,
+        "category": "kick",
+        "seed": 3456,
+        "seconds": 20.0,
+        "first_failure_s": null,
+        "pelvis_min_m": 0.7447440028190613,
+        "joint_mae_rad": 0.06320392340421677,
+        "root_error_m": 0.27483102679252625,
+        "reference_joint_accel_mean": 15.172666549682617,
+        "seam_joint_accel_mean": 13.369955062866211,
+        "reference_root_height_min": 0.7393536567687988,
+        "reference_root_height_max": 0.7850789427757263,
+        "final_root_displacement_m": 4.194714546203613
+      },
+      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+      "source_sha256": "b5cccf79a7f7c872adf071715dbdbac71e2d455ed7438f90470c1c5cc2f33331",
+      "preview_start_s": 0,
+      "preview_duration_s": 8,
+      "full_duration_s": 20,
+      "playback_speed": 1
     }
   ]
 }

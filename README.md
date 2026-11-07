@@ -26,13 +26,12 @@ in a **38D pose space**, using flow matching to continue an already committed re
     <td align="center" width="33%"><a href="docs/media/flow/turn.mp4"><img src="docs/media/flow/turn.gif" alt="Generated turns tracked in simulation" width="100%"></a><br>Repeated turns</td>
     <td align="center" width="33%"><a href="docs/media/flow/jump.mp4"><img src="docs/media/flow/jump.gif" alt="Generated upward reach tracked in simulation" width="100%"></a><br>Upward reach</td>
   </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/media/flow/walk.mp4"><img src="docs/media/flow/walk.gif" alt="Walking" width="100%"></a><br>Walking</td>
+    <td align="center" width="33%"><a href="docs/media/flow/run.mp4"><img src="docs/media/flow/run.gif" alt="Backward movement" width="100%"></a><br>Backward movement</td>
+    <td align="center" width="33%"><a href="docs/media/flow/kick.mp4"><img src="docs/media/flow/kick.gif" alt="Stepping and kicking" width="100%"></a><br>Stepping and kicking</td>
+  </tr>
 </table>
-
-Selected **HoloMotion physics executions**, generated with the 190.5k checkpoint.
-GIFs show eight-second excerpts at normal speed; click for the full 20-second videos.
-[Prompts, seeds and selection details](docs/media/flow/README.md) ·
-[Paired checkpoint evaluation](docs/flow-long-eval.md).
-These are curated examples, not an overall success-rate claim or a claim of comprehensive checkpoint selection.
 
 ## 1. Install
 
