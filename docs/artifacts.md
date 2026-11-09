@@ -1,4 +1,10 @@
-# Released inference artifacts
+# Flow and historical diffusion artifacts
+
+Flow deployment requires a Flow trainer checkpoint; set its path in
+`deployment/sync_flow.json`. No Flow weights are bundled. The README video
+manifest records the exact 190.5k checkpoint hash.
+
+## Historical diffusion bundle (offline benchmarks only)
 
 Use the [38D / 50Hz bundle](https://huggingface.co/THU-MARS/OMG/tree/main/checkpoints/38D).
 The best-validation checkpoint is `sstep=075500.ckpt`, SHA256
@@ -15,8 +21,3 @@ The bundle's validation record reports a 100-frame native50Hz generation from
 standing history, with exact output parity against the original training config.
 It is not tracker or physical-robot acceptance. The released checkpoint was
 trained with diffusion loss only. Optional FK loss remains available for new runs.
-
-For the simulation CLI, export `OMG38_ARTIFACT_DIR` as the absolute bundle
-folder and optionally `OMG38_T5` as a local T5-base directory. Pass its
-`config.yaml`, checkpoint and seed motion to the pipeline. HoloMotion v1.4.1
-`model_16200_dynamic_batch.onnx` and tracking dependencies are obtained separately.

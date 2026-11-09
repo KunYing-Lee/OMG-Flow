@@ -86,7 +86,7 @@ def run_control(generator, tracker, robot, standing, *, duration, prefix_length,
     return np.asarray(references), np.asarray(executed), np.asarray(targets), ticks, replans
 
 
-def render_video(robot, reference, executed, replans, ticks, path, period):
+def render_video(robot, reference, executed, replans, ticks, path, period, *, showcase=False):
     import imageio.v2 as imageio
     import mujoco
 
@@ -98,42 +98,52 @@ def render_video(robot, reference, executed, replans, ticks, path, period):
     camera.distance, camera.azimuth, camera.elevation = 3.6, 90, -15
     by_tick = {row["tick"]: row for row in replans}
     latest = replans[0]
-    with mujoco.Renderer(robot.model, height=480, width=640) as renderer, imageio.get_writer(
-        str(path), fps=50, codec="libx264", quality=7, ffmpeg_log_level="warning", macro_block_size=16,
+    height, width, stride = (360, 480, 2) if showcase else (480, 640, 1)
+    with mujoco.Renderer(robot.model, height=height, width=width) as renderer, imageio.get_writer(
+        str(path), fps=50 // stride, codec="libx264", quality=None,
+        ffmpeg_params=["-crf", "25", "-movflags", "+faststart"],
+        ffmpeg_log_level="warning", macro_block_size=2,
     ) as writer:
         for tick, (ref, actual) in enumerate(zip(reference, executed)):
             latest = by_tick.get(tick, latest)
+            if tick % stride:
+                continue
             panels = []
             # Matched world camera preserves root-position error in the paired view.
             camera.lookat[:] = [ref[0], ref[1], 0.85]
             for label, qpos in (("Generated reference (kinematic)", ref), ("HoloMotion executing (MuJoCo)", actual)):
                 set_g1_qpos(robot.model, data, robot.g1, qpos)
                 renderer.update_scene(data, camera=camera)
-                panels.append(draw_overlay(renderer.render().copy(), [
+                lines = [label, f"SIM t={tick / 50:.2f}s"] if showcase else [
                     label, f"SIM t={tick / 50:.2f}s  tick={tick}  replan={period:.1f}s",
                     f"{'REPLAN NOW' if tick in by_tick else 'last replan'} @{latest['tick']}: {latest['generation_ms']:.2f} ms",
                     f"Full tick {ticks[tick]['compute_ms']:.2f} ms: {'OVERRUN' if ticks[tick]['compute_ms'] > 20 else 'within 20 ms'}",
                     "50 Hz simulation time; see JSON for wall-clock deadlines",
-                ]))
+                ]
+                panels.append(draw_overlay(renderer.render().copy(), lines))
             writer.append_data(np.concatenate(panels, axis=1))
 
 
 def main():
-    os.environ.setdefault("MUJOCO_GL", "egl")
-    os.environ.setdefault("MUJOCO_EGL_DEVICE_ID", os.environ.get("CUDA_VISIBLE_DEVICES", "0"))
-    from deployment.sync_robot import HoloTracker, MujocoRobot
-
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--config", type=Path, default=Path("deployment/sync_flow.json"))
+    parser.add_argument("--output", type=Path, default=Path("outputs/sync"))
+    parser.add_argument("--prompt")
+    parser.add_argument("--seed", type=int)
+    parser.add_argument("--showcase", action="store_true", help="Compact 25 fps paired video; control remains 50 Hz")
     parser.add_argument("--period", type=float)
     parser.add_argument("--steps", type=int, choices=(5, 10))
     parser.add_argument("--duration", type=float)
     parser.add_argument("--backend", choices=("torch-fp32", "torch-fp16", "tensorrt-fp16"))
     parser.add_argument("--lowpass-hz", type=float, help="0 disables filtering")
     args = parser.parse_args()
+    os.environ.setdefault("MUJOCO_GL", "egl")
+    os.environ.setdefault("MUJOCO_EGL_DEVICE_ID", os.environ.get("CUDA_VISIBLE_DEVICES", "0"))
+    from deployment.sync_robot import HoloTracker, MujocoRobot
+
     config = json.loads(args.config.read_text())
-    for key, value in (("replan_period", args.period), ("steps", args.steps), ("duration", args.duration), ("backend", args.backend)):
+    for key, value in (("replan_period", args.period), ("steps", args.steps), ("duration", args.duration),
+                       ("backend", args.backend), ("prompt", args.prompt), ("seed", args.seed)):
         if value is not None:
             config[key] = value
     if args.lowpass_hz is not None:
@@ -174,17 +184,24 @@ def main():
         report["engine"] = {"path": str(generator.trt.path), "cache_hit": generator.trt.cache_hit,
                             "contract": generator.trt.contract}
     fallen = executed[:, 2] < 0.45
+    # Same height/tilt screen as the historical README suite; retain the sync
+    # 0.45 m diagnostic separately so a deliberate squat is not called a fall.
+    tilt_cos = 1 - 2 * (executed[:, 4] ** 2 + executed[:, 5] ** 2)
+    failed = np.flatnonzero((executed[:, 2] < 0.35) | (tilt_cos < 0.5))
     report.update({
         "duration_s": len(ticks) / 50, "control_overruns": sum(row["compute_ms"] > 20 for row in ticks),
         "deadline_misses": sum(row["late_ms"] is not None and row["late_ms"] > 0 for row in ticks),
         "replan_overruns": sum(row["planning_ms"] > 20 for row in replans),
         "root_height_min_m": float(executed[:, 2].min()),
         "first_height_below_045m_s": float(np.flatnonzero(fallen)[0] / 50) if fallen.any() else None,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "first_failure_s": float(failed[0] / 50) if len(failed) else None,
         "joint_rmse_rad": float(np.sqrt(np.mean((reference[:, 7:] - executed[:, 7:]) ** 2))),
         "root_position_rmse_m": float(np.sqrt(np.mean(np.sum((reference[:, :3] - executed[:, :3]) ** 2, axis=1)))),
     })
     args.output.with_suffix(".json").write_text(json.dumps(report, indent=2) + "\n")
-    render_video(robot, reference, executed, replans, ticks, args.output.with_suffix(".mp4"), config["replan_period"])
+    render_video(robot, reference, executed, replans, ticks, args.output.with_suffix(".mp4"),
+                 config["replan_period"], showcase=args.showcase)
     print(json.dumps({key: value for key, value in report.items() if key not in ("ticks", "replans")}, indent=2))
 
 

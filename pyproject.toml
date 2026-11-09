@@ -47,10 +47,7 @@ tracking = [
   "imageio-ffmpeg>=0.5,<1",
   "mujoco>=3.7,<3.8",
   "onnxruntime-gpu>=1.18,<2",
-  "tensorrt-cu12>=10.16,<10.17",
-]
-realtime = [
-  "pyzmq>=26,<27",
+  "tensorrt-cu12>=10.13,<10.17",
 ]
 export = [
   "onnx>=1.16,<2",
@@ -67,13 +64,13 @@ all = [
   "huggingface-hub>=0.34,<1",
   "matplotlib>=3.10,<3.11",
   "mujoco>=3.7,<3.8",
+  "onnx>=1.16,<2",
   "onnxruntime-gpu>=1.18,<2",
   "opencv-python>=4.9",
   "pandas>=2.2,<2.4",
   "pyarrow>=16,<23",
   "pytest>=8.0",
-  "pyzmq>=26,<27",
-  "tensorrt-cu12>=10.16,<10.17",
+  "tensorrt-cu12>=10.13,<10.17",
   "sentencepiece>=0.2,<0.3",
   "transformers>=4.40,<5",
   "wandb>=0.26,<0.27",

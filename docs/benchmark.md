@@ -1,4 +1,4 @@
-# Benchmark
+# Historical diffusion benchmark
 
 The default text protocol uses native **50 Hz**, **100 predicted frames (2 s)**,
 10 history frames, the 38D representation and `exp=50m`. Sampling uses the
@@ -32,7 +32,7 @@ PYTHONPATH=src python -m omg.cli.generation.benchmark \
   has no autoregressive seam, so transition metrics are reported as disabled.
   Longer-window or tracker-executed evaluations are separate protocols.
 
-For deployment parity, run `scripts/validation/native50_sim.py` with fixed
-raw plans, initial history and the HoloMotion model. It compares synchronous
-tracking against the deployment observation/action path at logical 30/50/70 ms
-latency. This does not measure inference wall time or physical robot quality.
+For Flow deployment parity use `python -m deployment.check_sync_backend`.
+The fixed [sync showcase](media/flow/README.md) executes generation and tracking
+online in the same control loop; the [long evaluation](flow-long-eval.md) is a
+separate offline checkpoint-comparison protocol.

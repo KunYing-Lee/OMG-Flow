@@ -1,1 +1,1 @@
-"""Native 50Hz fixed-switch motion pipeline."""
+"""Offline diffusion checkpoint/CUDA replay utilities, retained for evaluation."""

@@ -116,9 +116,13 @@ def body_angvel_from_quats(quats_wxyz: np.ndarray, fps: float) -> np.ndarray:
 
 def native_qpos(qpos_36: np.ndarray, source_fps: float, target_fps: float = 50.) -> np.ndarray:
     if float(source_fps) != 50. or float(target_fps) != 50.:
-        raise ValueError("OMG-Lite accepts native 50Hz motion only; convert datasets outside the runtime")
-    from omg.pipeline.schedule import motion
-    return motion(qpos_36)
+        raise ValueError("OMG-Flow accepts native 50Hz motion only; convert datasets outside the runtime")
+    q = np.asarray(qpos_36, dtype=np.float32)
+    if q.ndim != 2 or q.shape[1] != 36 or not len(q) or not np.isfinite(q).all():
+        raise ValueError("Expected nonempty finite (T,36) qpos")
+    if not np.allclose(np.linalg.norm(q[:, 3:7], axis=1), 1, atol=1e-4):
+        raise ValueError("Root quaternions must be normalized")
+    return q.copy()
 
 
 def g1_qpos_joint_slice_to_onnx(qpos_g1: np.ndarray, onnx_to_g1: np.ndarray) -> np.ndarray:

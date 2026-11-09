@@ -1,6 +1,6 @@
 <div align="center">
   <h1>OMG-Flow</h1>
-  <p>Native 50 Hz · Flow Matching · Committed-Prefix Continuation</p>
+  <p>50 Hz Control · Synchronous 0.2 s Replanning · Flow Matching</p>
   <p>
     Built on <a href="https://github.com/KunYing-Lee/OMG-Lite">OMG-Lite</a> and
     <a href="https://github.com/Tsinghua-MARS-Lab/OMG">OMG: Omni-Modal Motion Generation for Generalist Humanoid Control</a>.
@@ -18,6 +18,7 @@ in a **38D pose space**, using flow matching to continue an already committed re
 
 - **Flow matching:** learn a velocity field and generate motion with a deterministic Euler solver.
 - **Clean committed prefix:** preserve the frames already exposed to the tracker and generate only the editable suffix.
+- **Default controller:** synchronous 0.2 s replanning, TensorRT FP16 Euler-10, and an 8 Hz suffix low-pass.
 - **BONES-SEED training:** actor-separated data, train-only normalization, and frozen T5-base text embeddings.
 
 <table>
@@ -89,10 +90,43 @@ Checkpoints include weights, optimizer, normalization and data provenance.
 [training details](docs/flow-method.md#validate-and-train) and
 [validation evidence](docs/flow-validation.md).
 
-## 4. Generate a Continuation
+## 4. Deploy and Simulate (Default)
 
-Use a checkpoint produced by the Flow trainer. Flow weights are not bundled
-with this repository; the upstream OMG diffusion checkpoint is not compatible.
+Use a checkpoint produced by the Flow trainer. Flow weights are not bundled;
+upstream diffusion checkpoints are incompatible. Install CUDA inference dependencies
+with `pip install -e '.[train,tracking,export,render]'`, then set the checkpoint,
+local T5-base and HoloMotion v1.4.1 paths in
+[deployment/sync_flow.json](deployment/sync_flow.json).
+
+```bash
+# Check processes and choose one idle GPU.
+nvidia-smi
+CUDA_VISIBLE_DEVICES=0 make deploy
+# Change only the prompt/seed/duration:
+CUDA_VISIBLE_DEVICES=0 make deploy \
+  DEPLOY_ARGS='--prompt "A person walks forward." --seed 1234 --duration 20'
+```
+
+The default runs **read state → synchronous Flow replan → HoloMotion tracker →
+physics/write** in one thread at 50 Hz, replanning every ten ticks (0.2 s).
+It preserves a 25-frame committed prefix and applies the 8 Hz low-pass only to
+the new suffix. TensorRT FP16 uses ten Euler steps; engine creation and warmup
+finish before the control epoch. There is no asynchronous planner/server path.
+
+Each run saves a two-panel MP4 (**generated reference | sim execution**), raw
+NPZ trajectories and JSON timing/failure diagnostics under `outputs/sync.*`.
+`make export-sync` prebuilds the engine. `make showcase SHOWCASE_ARGS='--gpu 0'`
+regenerates the fixed [media cases](docs/media/flow/cases.json), monitoring the
+selected GPU and stopping if another process appears.
+
+Simulation waits during compute overruns; video playback uses simulation time.
+Deadline misses remain in the reports. The physical `RobotSDK` binding is still
+unimplemented. See [deployment setup](deployment/README.md) and
+[the full timing/filter contract](deployment/SYNC.md).
+
+## 5. Offline Generation and Evaluation
+
+For a programmatic continuation:
 
 ```python
 from omg.generation.flow_reference import FlowReferenceGenerator
@@ -104,34 +138,16 @@ suffix = generator.generate_suffix(
 )
 ```
 
-Inputs are world-space G1 poses `[B, T, 36]`: xyz, wxyz, and 29 joint angles.
-Pass ten history frames immediately before the committed prefix, plus explicit
-noise `[B, 100, 38]` and cached T5 tokens. With a 25-frame prefix, the returned
-suffix contains 75 new poses; keep the original prefix in the reference buffer.
-See [the generation contract](docs/flow-method.md#continue-an-exposed-reference).
+Inputs are world-space G1 poses `[B, T, 36]`: xyz, wxyz and 29 joint angles.
+Use ten history frames, explicit noise `[B, 100, 38]` and cached T5 tokens.
+With P25, this lower-level API returns 75 new poses; the deployment controller
+adds scheduling, the configured suffix filter and tracker execution.
 
-## 5. Simulate and Evaluate
-
-Use [HoloMotion](https://github.com/HorizonRobotics/HoloMotion) tracking artifacts
-separately. The paired evaluation uses fixed test clips, text and noise seeds,
-20-second autoregressive continuations, and unmodified native 50 Hz physics replay.
-
-```bash
-python scripts/validation/flow_long_eval.py generate \
-  --data /data/bones --text /data/bones-text \
-  --run /runs/bones-flow --out outputs/flow-eval
-MUJOCO_GL=disable python scripts/validation/flow_long_eval.py track \
-  --out outputs/flow-eval --onnx /models/holomotion/model_16200.onnx
-python scripts/validation/flow_long_eval.py render \
-  --out outputs/flow-eval --with-gt
-```
-
-Rendering requires a working OpenGL context. See
-[protocol, metrics and limitations](docs/flow-long-eval.md).
-In the six-clip, three-seed suite, both evaluated checkpoints completed all
-18 rollouts without crossing the height/tilt failure screen. Root tracking
-drift and excess joint acceleration remain; real-time and hardware acceptance
-have not been established.
+The [historical long evaluation](docs/flow-long-eval.md) compares checkpoints
+using fixed dataset histories and offline reference replay. Its old survival
+results do not describe the standing-start synchronous gallery above.
+Training/data and offline diffusion benchmark tools remain available; see
+[the method](docs/flow-method.md) and [benchmark protocol](docs/benchmark.md).
 
 ## Acknowledgements
 

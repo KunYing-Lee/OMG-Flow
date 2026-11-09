@@ -1,8 +1,8 @@
 # Synchronous OMG-Flow deployment
 
-Run from the repository root with `src` on `PYTHONPATH`. This entrypoint loads
-**only** `MotionFlow` checkpoints through `FlowReferenceGenerator`; it does not
-use the existing Lite planner, stream server, ROS adapter, or diffusion exporter.
+Run from the repository root with `src` on `PYTHONPATH`. This is the default deployment entrypoint. It loads `MotionFlow` checkpoints
+through `FlowReferenceGenerator` and executes generation and tracking in the
+same thread.
 
 ```bash
 # Check processes first; select one genuinely idle GPU.
@@ -22,9 +22,10 @@ python -m pytest -q tests/generation/test_sync_deployment.py
 `sync_flow.json` supplies checkpoint, prompt, Euler steps (10 or 5), prefix
 length, replan period, explicit backend, engine cache directory, low-pass cutoff,
 tracker, T5, scene, seed, and duration.
-The checked-in paths point to the front-kick SFT and HoloMotion v1.4.1 assets on
-the shared HQ `/root`. Install the repository with `[train,tracking,render,dev]`
-extras in a CUDA environment. The ONNX graph must sit beside external weights
+Set the `/models` paths to your Flow checkpoint, local T5-base and HoloMotion
+v1.4.1 assets. Install the repository with `[train,tracking,export,render,dev]`
+extras in a CUDA environment. The README suite pins the original 190.5k
+checkpoint hash in its manifest; the earlier timing study used front-kick SFT. The ONNX graph must sit beside external weights
 `4de98d3c-9d3c-11f1-aff4-06f301228322`. No model files are committed.
 
 ## Timing and commitment
@@ -146,5 +147,7 @@ The simulator uses the HoloMotion scene, metadata PD gains/scales, and MuJoCo
 actuator limits. Beyond the specified suffix filter, it adds no action clipping, balance forces,
 or reset-on-fall. Raw reference, execution and target arrays are saved in `.npz`;
 `.json` contains tick timestamps, replan timing, splice probes and tracking metrics.
-The simple survival diagnostic is first root height below 0.45 m; it is not a
-full contact/foot-slip or kick-quality evaluator.
+Reports retain the first root height below 0.45 m and separately apply the
+historical README failure screen: root height below 0.35 m or tilt above
+60 degrees, with no early termination. Neither establishes prompt compliance
+or full contact/foot-slip quality.

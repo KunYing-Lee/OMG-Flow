@@ -1,19 +1,19 @@
 # Generation and simulation
 
-Use `python -m omg.cli.pipeline.main --help`. The only integrated execution
-modes are `sync` and `async`; both use native50Hz, prediction100, history10,
-a configurable switch period (default: request25, raw history40–49,
-switch50 and a phase39 preview deadline).
+The default deployment/inference path is `python -m deployment.run_sync`, or
+`make deploy`. Configure model paths in `deployment/sync_flow.json`.
+The loop runs at 50 Hz and replans synchronously every ten ticks (0.2 s), using
+TensorRT FP16 Euler-10 and an 8 Hz suffix low-pass with a clean 25-frame prefix.
 
-Pass the saved resolved training config with its checkpoint. Representation,
-normalization and architecture must match. No automatic frame-rate conversion
-or checkpoint downgrade is performed. The simulator records generated plans,
-reference motion and executed motion. Sync pauses the simulation clock while
-planning. Async errors on missed wall-clock deadlines.
+```bash
+CUDA_VISIBLE_DEVICES=0 make deploy DEPLOY_ARGS='--prompt "A person walks forward."'
+```
 
-Standalone generation remains available through `omg.cli.generation.generate`.
-ONNX export remains an artifact tool, but the retired multi-mode ONNX pipeline,
-DiT skipping and diffusion continuation scheduler are not deployment paths.
+See [deployment](../deployment/README.md) for setup and
+[SYNC.md](../deployment/SYNC.md) for timing, noise, commitment and filter details.
+No planner server, background generation or request/lead scheduler is used.
 
-Videos use `holomotion` for generated/raw reference motion and the tracker’s
-original `tracker_native` scene for execution. `--video` records both side by side.
+For programmatic offline continuation use `FlowReferenceGenerator` as described
+in [the Flow method](flow-method.md#continue-an-exposed-reference).
+The diffusion generation/export tools remain for training and benchmark
+reproduction; their checkpoints are not accepted by the Flow deployment path.

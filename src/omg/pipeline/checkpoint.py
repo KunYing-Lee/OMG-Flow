@@ -1,4 +1,4 @@
-"""Native checkpoint inference; 38D pose representation at 50 Hz."""
+"""Diffusion checkpoint replay evaluator; deployment uses deployment.run_sync."""
 
 import json
 import time
@@ -9,7 +9,9 @@ from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
 from omg.generation.architecture import validate_checkpoint_architecture_contract
-from omg.pipeline.schedule import HISTORY, HORIZON, motion
+from omg.tracking.holomotion.reference import native_qpos
+
+HISTORY, HORIZON = 10, 100
 
 
 class CheckpointPlanner:
@@ -58,7 +60,10 @@ class CheckpointPlanner:
     @torch.inference_mode()
     def plan(self, history, text, plan_id):
         start = time.perf_counter()
-        prev = torch.from_numpy(motion(history, HISTORY)).to(self.device)[None]
+        history = native_qpos(history, 50)
+        if len(history) != HISTORY:
+            raise ValueError("Expected ten history frames")
+        prev = torch.from_numpy(history).to(self.device)[None]
         body = self.rep.kinematics.forward_body_positions(prev)
         features, pos, quat = self.rep.codec.prev_state_features_from_history(
             prev, body, None, fps=torch.tensor([50.0], device=self.device)
@@ -86,7 +91,7 @@ class CheckpointPlanner:
                 .numpy()
             )
         return {
-            "qpos": motion(qpos, HORIZON),
+            "qpos": native_qpos(qpos, 50),
             "latency_s": time.perf_counter() - start,
             "noise_seed": self.seed + plan_id,
         }
