@@ -47,10 +47,7 @@ def main():
                 "source_sha256": {str(p): hashlib.sha256(p.read_bytes()).hexdigest()
                                   for p in sorted([*Path('deployment').glob('*.py'),
                                                    *Path('src').rglob('*.py'), Path(__file__)])},
-                "asset_sha256": {key: hashlib.sha256(Path(config[key]).read_bytes()).hexdigest()
-                                 for key in ("checkpoint", "tracker", "scene")}, "clips": []}
-    external = Path(config["tracker"]).with_name("4de98d3c-9d3c-11f1-aff4-06f301228322")
-    manifest["asset_sha256"]["tracker_external"] = hashlib.sha256(external.read_bytes()).hexdigest()
+                "clips": []}
     with (args.output / "gpu_guard.jsonl").open("a", buffering=1) as guard:
         for case in cases:
             command = [sys.executable, "-m", "deployment.run_sync", "--config", str(args.config),
@@ -83,6 +80,16 @@ def main():
                         break
                     time.sleep(0.5)
             report = json.loads((args.output / (case["name"] + ".json")).read_text())
+            if not manifest["clips"]:
+                # Check availability and start the child before large model I/O.
+                # The generator already hashes its checkpoint while owning CUDA.
+                manifest["asset_sha256"] = {
+                    "checkpoint": report["checkpoint"]["checkpoint_sha256"],
+                    **{key: hashlib.sha256(Path(config[key]).read_bytes()).hexdigest()
+                       for key in ("tracker", "scene")},
+                    "tracker_external": hashlib.sha256(Path(config["tracker"]).with_name(
+                        "4de98d3c-9d3c-11f1-aff4-06f301228322").read_bytes()).hexdigest(),
+                }
             import imageio_ffmpeg
 
             subprocess.run([

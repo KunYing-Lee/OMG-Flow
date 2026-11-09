@@ -42,6 +42,8 @@ class FlowGenerator(nn.Module):
         backend = config["backend"]
         if backend not in ("torch-fp32", "torch-fp16", "tensorrt-fp16"):
             raise ValueError("backend must be torch-fp32, torch-fp16 or tensorrt-fp16")
+        # Make this job visible to shared-device monitors during checkpoint I/O.
+        torch.cuda.init()
         self.reference = FlowReferenceGenerator.from_checkpoint(config["checkpoint"], "cuda").requires_grad_(False)
         self.history, self.horizon = self.reference.history, self.reference.horizon
         if self.reference.model.text_proj is None:
