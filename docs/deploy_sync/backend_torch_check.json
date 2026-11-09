@@ -1,0 +1,28 @@
+{
+  "backend": "torch-fp16-cudagraph",
+  "contract": {
+    "format": "omg-flow-sync-v1",
+    "steps": 10,
+    "prefix_length": 25,
+    "checkpoint_sha256": "87fee467ef75589ccc39216e08a567fc6a4888b08b3c74200e6775764cece578",
+    "prompt": "A classical dancer kicks one leg forward.",
+    "history": 10,
+    "horizon": 100
+  },
+  "atol": 0.01,
+  "rtol": 0.01,
+  "cases": [
+    {
+      "max_abs_qpos_error": 0.0,
+      "repeat_exact": true
+    },
+    {
+      "max_abs_qpos_error": 0.0,
+      "repeat_exact": true
+    },
+    {
+      "max_abs_qpos_error": 0.0,
+      "repeat_exact": true
+    }
+  ]
+}

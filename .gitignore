@@ -41,3 +41,7 @@ __pycache__/
 /data/
 /scratch/
 *.safetensors
+
+# Small, requested synchronous deployment evidence.
+!docs/deploy_sync/*.mp4
+!docs/deploy_sync/*.npz

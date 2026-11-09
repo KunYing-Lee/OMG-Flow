@@ -132,8 +132,7 @@ def matrix_to_quaternion(matrix):
         ],
         dim=-2,
     )
-    flr = torch.tensor(0.1).to(dtype=q_abs.dtype, device=q_abs.device)
-    quat_candidates = quat_by_rijk / (2.0 * q_abs[..., None].max(flr))
+    quat_candidates = quat_by_rijk / (2.0 * q_abs[..., None].clamp_min(0.1))
     indices = q_abs.argmax(dim=-1, keepdim=True)
     expand_dims = list(batch_dim) + [1, 4]
     gather_indices = indices.unsqueeze(-1).expand(expand_dims)
@@ -394,7 +393,7 @@ def quaternion_invert(quaternion):
         The inverse, a tensor of quaternions of shape (..., 4).
     """
 
-    return quaternion * quaternion.new_tensor([1, -1, -1, -1])
+    return torch.cat((quaternion[..., :1], -quaternion[..., 1:]), dim=-1)
 
 
 def quaternion_apply(quaternion, point):
@@ -469,14 +468,13 @@ def axis_angle_to_quaternion(axis_angle):
     half_angles = 0.5 * angles
     eps = 1e-6
     small_angles = angles.abs() < eps
-    sin_half_angles_over_angles = torch.empty_like(angles)
-    sin_half_angles_over_angles[~small_angles] = (
-        torch.sin(half_angles[~small_angles]) / angles[~small_angles]
-    )
     # for x small, sin(x/2) is about x/2 - (x/2)^3/6
     # so sin(x/2)/x is about 1/2 - (x*x)/48
-    sin_half_angles_over_angles[small_angles] = (
-        0.5 - (angles[small_angles] * angles[small_angles]) / 48
+    # Keep shapes static for CUDA graph capture. The inactive division must also
+    # stay finite so autograd does not propagate NaNs at the zero rotation.
+    sin_half_angles_over_angles = torch.where(
+        small_angles, 0.5 - (angles * angles) / 48,
+        torch.sin(half_angles) / torch.where(small_angles, torch.ones_like(angles), angles),
     )
     quaternions = torch.cat(
         [torch.cos(half_angles), axis_angle * sin_half_angles_over_angles], dim=-1

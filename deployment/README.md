@@ -1,5 +1,8 @@
 # G1 Controller Adapters
 
+For the **OMG-Flow-only synchronous 50 Hz loop with 0.2 s replanning**, see
+[SYNC.md](SYNC.md). The older adapters below are separate and are not used by it.
+
 See [G1 Deployment](../docs/realtime_g1.md) for the pipeline, planner and shadow
 commands. These adapters target the external HoloMotion v1.4.1 ROS 2 controller.
 **Full shadow and physical acceptance are pending.**
