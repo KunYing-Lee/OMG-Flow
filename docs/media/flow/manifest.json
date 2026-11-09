@@ -1,204 +1,2018 @@
 {
-  "selection": "190.5k only; lowest mean root tracking error among three evaluated seeds per displayed category",
-  "rendering": "MuJoCo pose rendering of recorded physics execution, no trajectory edits",
+  "source_commit": "af52b1d43388102ed9e30d6f0ef6561cdd2d1d91",
+  "runs": [
+    {
+      "config": {
+        "checkpoint": "/root/leeky/omg-flow/selected/bones-native50-step190500.pt",
+        "prompt": "A person walks forward.",
+        "steps": 10,
+        "prefix_length": 25,
+        "replan_period": 0.2,
+        "text_encoder": "/root/leeky/projects/OMG-Posttrain/flow-ab-20261108/assets/t5-base-local",
+        "tracker": "/root/leeky/projects/OMG-Posttrain/deploy-assets/assets/tracker/model_16200_dynamic_batch.onnx",
+        "scene": "assets/holomotion/g1_29dof/scene_29dof.xml",
+        "standing_height": 0.79,
+        "duration": 20,
+        "seed": 1234,
+        "overrun": "log",
+        "pace": true,
+        "backend": "tensorrt-fp16",
+        "engine_cache": "tensorrt_engine_cache/flow_sync",
+        "lowpass_hz": 8.0
+      },
+      "gpu_uuid": "GPU-18dcfd2a-21e9-1c6e-7f0e-62559aeef036",
+      "physical_gpu": 2,
+      "initialization": "tracker default standing pose; no dataset history",
+      "selection": "all fixed cases and seeds; no retries selected by motion outcome",
+      "rendering": "generated reference | recorded MuJoCo execution, matched world camera, 25 fps, normal speed",
+      "source_sha256": {
+        "/root/leeky/projects/OMG-Flow-default-20261109/scripts/validation/sync_showcase.py": "4ed6e3e9fdf20361c1a70428095c2f3b408221f70cdf0148d15d3e528bc13178",
+        "deployment/check_sync_backend.py": "bf5d9459b8cb060b9c575281f9e1a94226960f23484d5fa1c0f3f0fbf6a39249",
+        "deployment/export_sync.py": "6bd8c9639821522692b038e90e8434409eaa0275e37e769d74d48607be74eefd",
+        "deployment/flow_trt.py": "03483fdf47443770921292199bbf1f045cba4ca238ccce9c96c4fa55862241a7",
+        "deployment/run_sync.py": "005a58e71f38dc2867316413d6ecfd1dfd5e65d8788e5ab02190379eb3aa269e",
+        "deployment/sync_flow.py": "bd936728e3fee1383072ab501e97b86a80ab67a4cfe86a742d5197b9c6040d8f",
+        "deployment/sync_robot.py": "5523cb7f8019c3b280f8f5fcd6e0a56779f73e85564a2e06d8941758e1d7e8ce",
+        "src/omg/__init__.py": "e06eff3bd6a146e0082518eb791164e26b80b548f9bdcd21c9f0aca1220bca34",
+        "src/omg/benchmarks/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/benchmarks/artifacts.py": "2e85c582754362143e66dd5898991099b8fed369d6cb6b9d75affba7d35a9f60",
+        "src/omg/benchmarks/evaluator/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/benchmarks/evaluator/motion_encoder.py": "2275910e10579425a43a282ff03909c20181c4cfb4d5e022dec0ec0445cba047",
+        "src/omg/benchmarks/evaluator/representation.py": "92d725fe76acf4f00a1777b967c594aafee7fdcd173d4eeb2de2a7cbf3a7cb39",
+        "src/omg/benchmarks/evaluator/retrieval.py": "5db50c6352cfb3a1cb4e39145d6f771ea922cf08df8f41ecb4c211a6738392c4",
+        "src/omg/benchmarks/evaluator/text_cache.py": "3a1a65ac10e300f1d05fb867e02cb9c1c03daff29a5e6bba05fecb98d75f2504",
+        "src/omg/benchmarks/evaluator/text_encoder.py": "4dde1c33d222707bdf63c2d96ee54e2361e2a6802aaf333126256d8af2f81332",
+        "src/omg/benchmarks/lerobot.py": "1fa56614125047db8f8145a79fb8fe9adee1f64a98564c1665cbd727197c3c00",
+        "src/omg/benchmarks/metrics/__init__.py": "a66a012504ee6a3583eb0c50c47dbfed6b3f6480d4fd859f7343e2265ef5e110",
+        "src/omg/benchmarks/metrics/audio.py": "08f9b0bb39b29e70b7db3d2d6feb7069367ecfe7fdfc7652e1f9fdfdfe9407a8",
+        "src/omg/benchmarks/metrics/distribution.py": "55c028f7c6d690ee84f8fc89b32e468f93df638eca76fb3cb6c3084ddd557750",
+        "src/omg/benchmarks/metrics/text.py": "0043f0def1ffcac642b46497a6d8617d962a73b99b6487c6611f4679786babd2",
+        "src/omg/benchmarks/metrics/tracking.py": "d34f911b72606ca64fc2671209b82b2ec2f4e61e683164c7a267a94979918d28",
+        "src/omg/benchmarks/metrics/transition.py": "db08610de77f01826d3764232b45d5b4c7126f935f2077aa1370bfe3fa8bbe13",
+        "src/omg/benchmarks/protocol.py": "e7dd93e261f551d1e1c03ec33b49a0c3622e3c8d608c2c5441d668ce00e85219",
+        "src/omg/benchmarks/report.py": "0777c31ad485fc4ec38105c7f902ab60228c2660387ef6d80a4a590e0b66d091",
+        "src/omg/benchmarks/runners/__init__.py": "5a1ae2c820aafdf0fdb26246944912bccb01d60f1e904477aca73d77519425e1",
+        "src/omg/benchmarks/runners/artifact.py": "5b1706d90dc7bf77703e424324e3d849fff7ee8b5642e153d90c58dabbe630e0",
+        "src/omg/benchmarks/runners/audio.py": "6d94ea1fec0b112e4be9cfcb0f17dccdb7a0c5ed00899c734ca53a4dffce698d",
+        "src/omg/benchmarks/runners/common.py": "713b54355caf8ddbd5b4e4d8be8de374c2301229db69cd6e86ad0dbf92183b5f",
+        "src/omg/benchmarks/runners/h2h_retarget.py": "18133e6efafeeb1a6a18b6d419cb3c78f14247dd9baf87070cf66dd80c32b12d",
+        "src/omg/benchmarks/runners/humanref.py": "d1feccd1fa0c0083708fa07765dec5c74a55c478747cf7e97851db35d86cb039",
+        "src/omg/benchmarks/runners/text.py": "203f34643bfde5647b4fb3d8a76aa065306694a2f6e4c88da381db9bbea3bf3a",
+        "src/omg/benchmarks/runners/tracker_executed.py": "c867b3c440963294bcdd0a4ae4c0fa533b32fdfd9f81ca96dabc0efd6598dc02",
+        "src/omg/benchmarks/sharded_artifacts.py": "39d31fdd2ca4a6335c334bdd094f249c79e9567fe4f1b606b48e4889edaa43c4",
+        "src/omg/callbacks/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/callbacks/divergence_guard.py": "c1ec2773dddda3bd800247bca0abd3eca46aeae3c78ebae8050b98739292b61a",
+        "src/omg/callbacks/fixed_motion_eval.py": "ab0bba0022dc5978bec6c3c51bf1aec2c412ce50b542822fd9c1ca49df23a84b",
+        "src/omg/callbacks/global_step_progress.py": "bd21180de0140a38fa2601f51b56c94aef346c757c140786e88b907720f3eb15",
+        "src/omg/callbacks/grad_norm.py": "c41e7e0bac01c984c85c38baf6de4b9e10ded95875a79ddc1c9d85ded5b9b742",
+        "src/omg/callbacks/speed_timer.py": "29ae0ec76a0545576bc31f240a4beab74f5c5e9ae50a0078c1ed46b8326fc360",
+        "src/omg/callbacks/training_diagnostics.py": "6e348e5cca9e690379cdb7a3364678b666d7c53d0a7405d5269ca713574a6917",
+        "src/omg/cli/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/cli/data/__init__.py": "052be341b9c1b05585d3a27073a741d768974cfdb2a91659a687ed1d3d6291f9",
+        "src/omg/cli/data/bones_stats.py": "bdb72d42e608863850cc15bdad5ca5681d9318d04b80fd564ee87ef6248c1bf3",
+        "src/omg/cli/data/cache_bones_text.py": "07e6812043ee6157c65655969b174748ff5cff3282ad459f5969d27585894f08",
+        "src/omg/cli/data/materialize_episode_cache.py": "94df52cd9351e7185cc092f9c8f978b506867ae90c1f123cb28c6e3c6c7f7326",
+        "src/omg/cli/data/resample_release.py": "1f1e0163a6c35565d3beda6cbfa0992f3e3bce57a75142255789ec3917357b9c",
+        "src/omg/cli/data/validate_episode_cache.py": "6840e28c774964583d88c6402c201ab36c0150ec67139403a66782364173c878",
+        "src/omg/cli/data/validate_resampled_release.py": "80ee47c98ce54aa2c6831bc124daf239a7d801f036deb90612f37784e673626b",
+        "src/omg/cli/evaluation/__init__.py": "83427993d56f4c67037ae91508269b1c2a90b4b3a7c2d383c64698ceeacb4788",
+        "src/omg/cli/evaluation/prepare_samples.py": "ff839b19b5809a00429f3e553c45d5bc7769f2dc7eb3eb14d53bdfe3c84f4ed9",
+        "src/omg/cli/generation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/cli/generation/benchmark.py": "ff813f344953da4b02388837f5a510230f8d4430393a88f205261faaf28c5dee",
+        "src/omg/cli/generation/compute_stats.py": "4bf677fb31cf8aa0ccef2360a2cab51f4f3916cc14e3cef32c276d87b2ea3e4c",
+        "src/omg/cli/generation/export_onnx.py": "8107e5b4e4674adf4b9ae843ac668e72949ea61afaf169609d5a4a29835f6529",
+        "src/omg/cli/generation/generate.py": "e5fda6aa998c7f9c842e979590b83eced66b1eab9e305fd5021d5739188059c6",
+        "src/omg/cli/generation/physical_benchmark.py": "f73cad25805ec2640910f82e8a2f97049fd614d8a7ff9effa1e5c853dbcfa133",
+        "src/omg/cli/generation/train.py": "2809f5f9b932412ee3bae46d1dc356ce539631ddd390f90339564c0284bdf67d",
+        "src/omg/cli/generation/train_diffusion.py": "a39cc0c6cfccd7b6660bbd9ab4f88f90bc634bb95ce30e22492c8a6cb74a7c8c",
+        "src/omg/cli/tracking/__init__.py": "3e88d2e630d58804989004a30611d317a20fd1f93a1ae6e5d45421ca72d29b60",
+        "src/omg/cli/tracking/export_holomotion_clip.py": "a9aba1a1709680e7403b106f2f6d8a28b41c1e83aa2e5b95fddb60a0f4eb2899",
+        "src/omg/cli/tracking/holomotion.py": "3bb01dd8b5668e62583cb0d4f43863617e15694037197e37490ced3f56bb00e5",
+        "src/omg/core/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/core/logging.py": "86c57564f7d8614d71d95e0ce377724642c8c3aa44501d9c317c33bf9ba7dce7",
+        "src/omg/core/paths.py": "6bb254b7219e70b58fc8581479857bfb7ee77a9f8937faf5dcec784dd1173a4d",
+        "src/omg/core/tensor.py": "998e6f24948983c15f3257f055a452e07b96cc0f13b357cb4881f4545bddb7d0",
+        "src/omg/data/__init__.py": "4e8cd9d824b5b834a673011d1cd95cf0227a1deb60ee917ba85ec364d51db21f",
+        "src/omg/data/bones.py": "70fb8cb728c5d667df9974affe418b73e4b05822169221a7f6c3a693d79ff8a3",
+        "src/omg/data/bones_prepare.py": "f37baad422fbc1ad679f30d9a728082bb4998310208f487b1b1f168403a2aea0",
+        "src/omg/data/datamodule.py": "52849ff2c870f2a40ccdefb1c0a0923300b08fa3b7c4dec2ada6125a6db77583",
+        "src/omg/data/episode_cache.py": "149738e95fcd3ebbcf0472630849273f351960160ec378425c443fbee7a97313",
+        "src/omg/data/episode_cache_inspect.py": "d3629bc09eb4db408191c54bccb9b12ef2cb6e28694bbc5bec0fdc440271d8c3",
+        "src/omg/data/lerobot_dataset.py": "8bee8c856993491416f9d30041007246c0ceef5a75aa60861b9007b1bda5054f",
+        "src/omg/data/windowing.py": "88710f0c24d6c696670b702b9ce77609c59acd2106389fa769a00d39a98f2afb",
+        "src/omg/generation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/architecture.py": "cef9472276b722f1ee5e0d095b5ad852f444e525e60910593d93282824bcec14",
+        "src/omg/generation/bones_text.py": "159588c6e84620a587e69e2214bc6e863021b54b934489a58e2f7e33d4f82d92",
+        "src/omg/generation/conditions/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/conditions/position.py": "5e19e700292e19ddae715fe7f6d7d172637f25b3d15febb01e47258eaf65b9c2",
+        "src/omg/generation/conditions/t5.py": "a2d37a2491f33df9b85aafc25518ef4b51e21e729a54c26e93a5c68f628d9bfe",
+        "src/omg/generation/denoisers/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/denoisers/interface.py": "c1f8b5f2a93e6cf0a4b5df730f9f744c95d9b58bc5245e3cb15176a61065e1dd",
+        "src/omg/generation/denoisers/transformer.py": "be9533c2aecf34df7d3301b74480dd7eb2cd8d2453d8339c25459755a1edff8d",
+        "src/omg/generation/diffusion/__init__.py": "fab4af0ec5b7b38892ffb309d6073841de00f8f37e5b4c2da1657e1b30c92e1c",
+        "src/omg/generation/diffusion/forcing.py": "4238148a7a7e5122d139fe348b0e16ea3faeb93c0e3392b78994dbe689f46116",
+        "src/omg/generation/diffusion/guided.py": "9519e3ea1bf0fd1b6dcece52815e541f68a081fc9933d2e8bf435f6b3866ecc8",
+        "src/omg/generation/diffusion/objectives.py": "db05bcbc32268e5d21298e19130e9e8f4b23eff7d1b679886306cd7c94195675",
+        "src/omg/generation/diffusion/schedules.py": "a06c3f3ab1d81e07f680d44f8fb9ef56e8bd2a6e4c5e4ac911c316217f6e92e0",
+        "src/omg/generation/export/__init__.py": "0ee7ed60aa43848dad0a4ba0e5dd29d815aab6dc37f4ae1c46d8e56a2ebc1770",
+        "src/omg/generation/export/onnx.py": "8b98b72579eb8f491b66b68b5b0a41a5b0fe3163c421d23cde9dcab5dc45c5a5",
+        "src/omg/generation/flow.py": "92af93432a37e8e8fc998c5ad8accdf8c63203bcb49f4b63ab3c92b658a907aa",
+        "src/omg/generation/flow_reference.py": "d64c0ea786d55a6aa0ad8fe2adf18bd7352bceacd16b94f570a63d5cf2e354ee",
+        "src/omg/generation/flow_seam.py": "16d77fd037322302d15989ca4b88d9438154e0735f3f453fbbb8e9603996fd0c",
+        "src/omg/generation/losses/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/losses/contact.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/losses/fk.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/losses/motion.py": "3d02388cbdea2949df81df20146af6297ff14a2c912d7b6607ecc09ea8f7bd38",
+        "src/omg/generation/losses/terrain.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/metrics/__init__.py": "f686c86d57bab24aa1dd27cfae2bbab88757d7909e74cd7d4b9525a892ba025e",
+        "src/omg/generation/metrics/physical.py": "7aa2d8fc7d29b9d3ec836c3d23d0b5a7fc64a1eea5359c7300f6e6e191904f29",
+        "src/omg/generation/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/models/motion_generator.py": "f610e25b7b0d47a2c64f7446e300d653f528eb6f9f28c924619d726a19d8fe12",
+        "src/omg/motion/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/motion/feature_codec.py": "9501909eaea62778d8695cec22f81264fa83142f3ed2b5f2a7e419a6ad3bc6da",
+        "src/omg/motion/representation.py": "9e41d8fc546fafa070137046f42ffba98d69babad54c9c5f47ca4beb230ffb9f",
+        "src/omg/pipeline/__init__.py": "a8b51b2c5aa353d881c6f6ecea76065671f749bc35a35cab5111945a63da3b4d",
+        "src/omg/pipeline/checkpoint.py": "8b3476c1ee137d8af510e88a154ceb4f80a09a2565c9941e2a8fc6479d592ebd",
+        "src/omg/pipeline/cuda_graph.py": "d18f606d7520188e254e66ecbe6e2a06841128f8e8b461f01a1b486491deb3a4",
+        "src/omg/render/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/render/mujoco.py": "9fe80811cb8a648c7e30c21b134a64e7d8ae6313f8a3de6824b613b243c17df1",
+        "src/omg/robots/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/robots/g1/__init__.py": "dc46237fccb843612112274586e9e00dee6a0e472f4ce6b93da267b64f8f4c19",
+        "src/omg/robots/g1/constants.py": "59a685663c7816a177f590970925d831132abb7b577524ee58281cbc521dce78",
+        "src/omg/robots/g1/kinematics.py": "c8adbae0d96ef85ba948e27f1fb16bed35d8529c08a6d71d1943d31644585db4",
+        "src/omg/runtime/__init__.py": "9728869f63d93ada09a0f77fc10e98f2add27f4ab84e999d228becca102315fe",
+        "src/omg/runtime/checkpoint_io.py": "1b9ce178d3e5c1bba39c77d3098ea7e64788d8c81c48acdebaec09cc1be88e5e",
+        "src/omg/runtime/onnx_providers.py": "5ed87e442ebf9c56b4065fc011c89d7745ac5bf163158fbf0732db160d0e5673",
+        "src/omg/tracking/__init__.py": "15ff33834a2a3b1c24f1a5d1b927f63804c18aa771a8466b8434ab6748590f90",
+        "src/omg/tracking/holomotion/__init__.py": "a147a5f8e6d22c55a5754cc824f6df0bb2002b9d3da22d4aca8f319c3748135f",
+        "src/omg/tracking/holomotion/augmentation.py": "2a3f9523ab5aaa77a671462be8814a25f82393e3c0e7fb53de0260a75ae67f79",
+        "src/omg/tracking/holomotion/export_clip.py": "09030198d4d99ccd9b18a2b2fae47897252e3960918a14a712f46d04a03b802b",
+        "src/omg/tracking/holomotion/io.py": "643b0ba619d6693807259644bac38041b916288d0a4bbd0c522b3187fa8fed2a",
+        "src/omg/tracking/holomotion/reference.py": "1729eee9d0bdbe4393f6e091ce1067f8d4bc8584d70d5013685ff9426b4e0f0e",
+        "src/omg/tracking/holomotion/rollout.py": "13462ddf0aa2e3862c930b087369f8a463f633fc74c509b8b95e4c2731829afe",
+        "src/omg/tracking/holomotion/runner.py": "fb841bd0f617d02abdc2f30cd516309e2f2635ec1583347f8e275f3e67e7a66f",
+        "src/omg/tracking/holomotion/runtime.py": "0abb774974c7967e2051d1c5bc1ee3f5b4ed765d0d137d93a0daed94c0b85042",
+        "src/omg/tracking/holomotion/video.py": "4446b822280464c3fbb036538e47971b0737f7d6d109827ae4d25edefb448362",
+        "src/omg/utils/rotation_conversions.py": "cfa6ee96ba517367c8ab9729c18ed2a120d32243cd7a914470e997d101d7a7e2"
+      },
+      "asset_sha256": {
+        "checkpoint": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+        "tracker": "15f7914f6460a1c2e71bc06191874146e7b4d1669dded095e072cf29aac7c056",
+        "scene": "4e6ae5f0f1d6bee36242fa02c36da1999748f94fa4d2a013f72ca1379b56bd69",
+        "tracker_external": "040d92d87de126dcf6ddbbf89ee5c065ced28e14ee875c3c0f29fd8425c126e8"
+      }
+    },
+    {
+      "config": {
+        "checkpoint": "/root/leeky/omg-flow/selected/bones-native50-step190500.pt",
+        "prompt": "A person walks forward.",
+        "steps": 10,
+        "prefix_length": 25,
+        "replan_period": 0.2,
+        "text_encoder": "/root/leeky/projects/OMG-Posttrain/flow-ab-20261108/assets/t5-base-local",
+        "tracker": "/root/leeky/projects/OMG-Posttrain/deploy-assets/assets/tracker/model_16200_dynamic_batch.onnx",
+        "scene": "assets/holomotion/g1_29dof/scene_29dof.xml",
+        "standing_height": 0.79,
+        "duration": 20,
+        "seed": 1234,
+        "overrun": "log",
+        "pace": true,
+        "backend": "tensorrt-fp16",
+        "engine_cache": "tensorrt_engine_cache/flow_sync",
+        "lowpass_hz": 8.0
+      },
+      "gpu_uuid": "GPU-cb47a071-d469-74c3-3693-6015b2ec3591",
+      "physical_gpu": 1,
+      "initialization": "tracker default standing pose; no dataset history",
+      "selection": "all fixed cases and seeds; no retries selected by motion outcome",
+      "rendering": "generated reference | recorded MuJoCo execution, matched world camera, 25 fps, normal speed",
+      "source_sha256": {
+        "/root/leeky/projects/OMG-Flow-default-20261109/scripts/validation/sync_showcase.py": "4ed6e3e9fdf20361c1a70428095c2f3b408221f70cdf0148d15d3e528bc13178",
+        "deployment/check_sync_backend.py": "bf5d9459b8cb060b9c575281f9e1a94226960f23484d5fa1c0f3f0fbf6a39249",
+        "deployment/export_sync.py": "6bd8c9639821522692b038e90e8434409eaa0275e37e769d74d48607be74eefd",
+        "deployment/flow_trt.py": "03483fdf47443770921292199bbf1f045cba4ca238ccce9c96c4fa55862241a7",
+        "deployment/run_sync.py": "005a58e71f38dc2867316413d6ecfd1dfd5e65d8788e5ab02190379eb3aa269e",
+        "deployment/sync_flow.py": "bd936728e3fee1383072ab501e97b86a80ab67a4cfe86a742d5197b9c6040d8f",
+        "deployment/sync_robot.py": "5523cb7f8019c3b280f8f5fcd6e0a56779f73e85564a2e06d8941758e1d7e8ce",
+        "src/omg/__init__.py": "e06eff3bd6a146e0082518eb791164e26b80b548f9bdcd21c9f0aca1220bca34",
+        "src/omg/benchmarks/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/benchmarks/artifacts.py": "2e85c582754362143e66dd5898991099b8fed369d6cb6b9d75affba7d35a9f60",
+        "src/omg/benchmarks/evaluator/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/benchmarks/evaluator/motion_encoder.py": "2275910e10579425a43a282ff03909c20181c4cfb4d5e022dec0ec0445cba047",
+        "src/omg/benchmarks/evaluator/representation.py": "92d725fe76acf4f00a1777b967c594aafee7fdcd173d4eeb2de2a7cbf3a7cb39",
+        "src/omg/benchmarks/evaluator/retrieval.py": "5db50c6352cfb3a1cb4e39145d6f771ea922cf08df8f41ecb4c211a6738392c4",
+        "src/omg/benchmarks/evaluator/text_cache.py": "3a1a65ac10e300f1d05fb867e02cb9c1c03daff29a5e6bba05fecb98d75f2504",
+        "src/omg/benchmarks/evaluator/text_encoder.py": "4dde1c33d222707bdf63c2d96ee54e2361e2a6802aaf333126256d8af2f81332",
+        "src/omg/benchmarks/lerobot.py": "1fa56614125047db8f8145a79fb8fe9adee1f64a98564c1665cbd727197c3c00",
+        "src/omg/benchmarks/metrics/__init__.py": "a66a012504ee6a3583eb0c50c47dbfed6b3f6480d4fd859f7343e2265ef5e110",
+        "src/omg/benchmarks/metrics/audio.py": "08f9b0bb39b29e70b7db3d2d6feb7069367ecfe7fdfc7652e1f9fdfdfe9407a8",
+        "src/omg/benchmarks/metrics/distribution.py": "55c028f7c6d690ee84f8fc89b32e468f93df638eca76fb3cb6c3084ddd557750",
+        "src/omg/benchmarks/metrics/text.py": "0043f0def1ffcac642b46497a6d8617d962a73b99b6487c6611f4679786babd2",
+        "src/omg/benchmarks/metrics/tracking.py": "d34f911b72606ca64fc2671209b82b2ec2f4e61e683164c7a267a94979918d28",
+        "src/omg/benchmarks/metrics/transition.py": "db08610de77f01826d3764232b45d5b4c7126f935f2077aa1370bfe3fa8bbe13",
+        "src/omg/benchmarks/protocol.py": "e7dd93e261f551d1e1c03ec33b49a0c3622e3c8d608c2c5441d668ce00e85219",
+        "src/omg/benchmarks/report.py": "0777c31ad485fc4ec38105c7f902ab60228c2660387ef6d80a4a590e0b66d091",
+        "src/omg/benchmarks/runners/__init__.py": "5a1ae2c820aafdf0fdb26246944912bccb01d60f1e904477aca73d77519425e1",
+        "src/omg/benchmarks/runners/artifact.py": "5b1706d90dc7bf77703e424324e3d849fff7ee8b5642e153d90c58dabbe630e0",
+        "src/omg/benchmarks/runners/audio.py": "6d94ea1fec0b112e4be9cfcb0f17dccdb7a0c5ed00899c734ca53a4dffce698d",
+        "src/omg/benchmarks/runners/common.py": "713b54355caf8ddbd5b4e4d8be8de374c2301229db69cd6e86ad0dbf92183b5f",
+        "src/omg/benchmarks/runners/h2h_retarget.py": "18133e6efafeeb1a6a18b6d419cb3c78f14247dd9baf87070cf66dd80c32b12d",
+        "src/omg/benchmarks/runners/humanref.py": "d1feccd1fa0c0083708fa07765dec5c74a55c478747cf7e97851db35d86cb039",
+        "src/omg/benchmarks/runners/text.py": "203f34643bfde5647b4fb3d8a76aa065306694a2f6e4c88da381db9bbea3bf3a",
+        "src/omg/benchmarks/runners/tracker_executed.py": "c867b3c440963294bcdd0a4ae4c0fa533b32fdfd9f81ca96dabc0efd6598dc02",
+        "src/omg/benchmarks/sharded_artifacts.py": "39d31fdd2ca4a6335c334bdd094f249c79e9567fe4f1b606b48e4889edaa43c4",
+        "src/omg/callbacks/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/callbacks/divergence_guard.py": "c1ec2773dddda3bd800247bca0abd3eca46aeae3c78ebae8050b98739292b61a",
+        "src/omg/callbacks/fixed_motion_eval.py": "ab0bba0022dc5978bec6c3c51bf1aec2c412ce50b542822fd9c1ca49df23a84b",
+        "src/omg/callbacks/global_step_progress.py": "bd21180de0140a38fa2601f51b56c94aef346c757c140786e88b907720f3eb15",
+        "src/omg/callbacks/grad_norm.py": "c41e7e0bac01c984c85c38baf6de4b9e10ded95875a79ddc1c9d85ded5b9b742",
+        "src/omg/callbacks/speed_timer.py": "29ae0ec76a0545576bc31f240a4beab74f5c5e9ae50a0078c1ed46b8326fc360",
+        "src/omg/callbacks/training_diagnostics.py": "6e348e5cca9e690379cdb7a3364678b666d7c53d0a7405d5269ca713574a6917",
+        "src/omg/cli/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/cli/data/__init__.py": "052be341b9c1b05585d3a27073a741d768974cfdb2a91659a687ed1d3d6291f9",
+        "src/omg/cli/data/bones_stats.py": "bdb72d42e608863850cc15bdad5ca5681d9318d04b80fd564ee87ef6248c1bf3",
+        "src/omg/cli/data/cache_bones_text.py": "07e6812043ee6157c65655969b174748ff5cff3282ad459f5969d27585894f08",
+        "src/omg/cli/data/materialize_episode_cache.py": "94df52cd9351e7185cc092f9c8f978b506867ae90c1f123cb28c6e3c6c7f7326",
+        "src/omg/cli/data/resample_release.py": "1f1e0163a6c35565d3beda6cbfa0992f3e3bce57a75142255789ec3917357b9c",
+        "src/omg/cli/data/validate_episode_cache.py": "6840e28c774964583d88c6402c201ab36c0150ec67139403a66782364173c878",
+        "src/omg/cli/data/validate_resampled_release.py": "80ee47c98ce54aa2c6831bc124daf239a7d801f036deb90612f37784e673626b",
+        "src/omg/cli/evaluation/__init__.py": "83427993d56f4c67037ae91508269b1c2a90b4b3a7c2d383c64698ceeacb4788",
+        "src/omg/cli/evaluation/prepare_samples.py": "ff839b19b5809a00429f3e553c45d5bc7769f2dc7eb3eb14d53bdfe3c84f4ed9",
+        "src/omg/cli/generation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/cli/generation/benchmark.py": "ff813f344953da4b02388837f5a510230f8d4430393a88f205261faaf28c5dee",
+        "src/omg/cli/generation/compute_stats.py": "4bf677fb31cf8aa0ccef2360a2cab51f4f3916cc14e3cef32c276d87b2ea3e4c",
+        "src/omg/cli/generation/export_onnx.py": "8107e5b4e4674adf4b9ae843ac668e72949ea61afaf169609d5a4a29835f6529",
+        "src/omg/cli/generation/generate.py": "e5fda6aa998c7f9c842e979590b83eced66b1eab9e305fd5021d5739188059c6",
+        "src/omg/cli/generation/physical_benchmark.py": "f73cad25805ec2640910f82e8a2f97049fd614d8a7ff9effa1e5c853dbcfa133",
+        "src/omg/cli/generation/train.py": "2809f5f9b932412ee3bae46d1dc356ce539631ddd390f90339564c0284bdf67d",
+        "src/omg/cli/generation/train_diffusion.py": "a39cc0c6cfccd7b6660bbd9ab4f88f90bc634bb95ce30e22492c8a6cb74a7c8c",
+        "src/omg/cli/tracking/__init__.py": "3e88d2e630d58804989004a30611d317a20fd1f93a1ae6e5d45421ca72d29b60",
+        "src/omg/cli/tracking/export_holomotion_clip.py": "a9aba1a1709680e7403b106f2f6d8a28b41c1e83aa2e5b95fddb60a0f4eb2899",
+        "src/omg/cli/tracking/holomotion.py": "3bb01dd8b5668e62583cb0d4f43863617e15694037197e37490ced3f56bb00e5",
+        "src/omg/core/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/core/logging.py": "86c57564f7d8614d71d95e0ce377724642c8c3aa44501d9c317c33bf9ba7dce7",
+        "src/omg/core/paths.py": "6bb254b7219e70b58fc8581479857bfb7ee77a9f8937faf5dcec784dd1173a4d",
+        "src/omg/core/tensor.py": "998e6f24948983c15f3257f055a452e07b96cc0f13b357cb4881f4545bddb7d0",
+        "src/omg/data/__init__.py": "4e8cd9d824b5b834a673011d1cd95cf0227a1deb60ee917ba85ec364d51db21f",
+        "src/omg/data/bones.py": "70fb8cb728c5d667df9974affe418b73e4b05822169221a7f6c3a693d79ff8a3",
+        "src/omg/data/bones_prepare.py": "f37baad422fbc1ad679f30d9a728082bb4998310208f487b1b1f168403a2aea0",
+        "src/omg/data/datamodule.py": "52849ff2c870f2a40ccdefb1c0a0923300b08fa3b7c4dec2ada6125a6db77583",
+        "src/omg/data/episode_cache.py": "149738e95fcd3ebbcf0472630849273f351960160ec378425c443fbee7a97313",
+        "src/omg/data/episode_cache_inspect.py": "d3629bc09eb4db408191c54bccb9b12ef2cb6e28694bbc5bec0fdc440271d8c3",
+        "src/omg/data/lerobot_dataset.py": "8bee8c856993491416f9d30041007246c0ceef5a75aa60861b9007b1bda5054f",
+        "src/omg/data/windowing.py": "88710f0c24d6c696670b702b9ce77609c59acd2106389fa769a00d39a98f2afb",
+        "src/omg/generation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/architecture.py": "cef9472276b722f1ee5e0d095b5ad852f444e525e60910593d93282824bcec14",
+        "src/omg/generation/bones_text.py": "159588c6e84620a587e69e2214bc6e863021b54b934489a58e2f7e33d4f82d92",
+        "src/omg/generation/conditions/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/conditions/position.py": "5e19e700292e19ddae715fe7f6d7d172637f25b3d15febb01e47258eaf65b9c2",
+        "src/omg/generation/conditions/t5.py": "a2d37a2491f33df9b85aafc25518ef4b51e21e729a54c26e93a5c68f628d9bfe",
+        "src/omg/generation/denoisers/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/denoisers/interface.py": "c1f8b5f2a93e6cf0a4b5df730f9f744c95d9b58bc5245e3cb15176a61065e1dd",
+        "src/omg/generation/denoisers/transformer.py": "be9533c2aecf34df7d3301b74480dd7eb2cd8d2453d8339c25459755a1edff8d",
+        "src/omg/generation/diffusion/__init__.py": "fab4af0ec5b7b38892ffb309d6073841de00f8f37e5b4c2da1657e1b30c92e1c",
+        "src/omg/generation/diffusion/forcing.py": "4238148a7a7e5122d139fe348b0e16ea3faeb93c0e3392b78994dbe689f46116",
+        "src/omg/generation/diffusion/guided.py": "9519e3ea1bf0fd1b6dcece52815e541f68a081fc9933d2e8bf435f6b3866ecc8",
+        "src/omg/generation/diffusion/objectives.py": "db05bcbc32268e5d21298e19130e9e8f4b23eff7d1b679886306cd7c94195675",
+        "src/omg/generation/diffusion/schedules.py": "a06c3f3ab1d81e07f680d44f8fb9ef56e8bd2a6e4c5e4ac911c316217f6e92e0",
+        "src/omg/generation/export/__init__.py": "0ee7ed60aa43848dad0a4ba0e5dd29d815aab6dc37f4ae1c46d8e56a2ebc1770",
+        "src/omg/generation/export/onnx.py": "8b98b72579eb8f491b66b68b5b0a41a5b0fe3163c421d23cde9dcab5dc45c5a5",
+        "src/omg/generation/flow.py": "92af93432a37e8e8fc998c5ad8accdf8c63203bcb49f4b63ab3c92b658a907aa",
+        "src/omg/generation/flow_reference.py": "d64c0ea786d55a6aa0ad8fe2adf18bd7352bceacd16b94f570a63d5cf2e354ee",
+        "src/omg/generation/flow_seam.py": "16d77fd037322302d15989ca4b88d9438154e0735f3f453fbbb8e9603996fd0c",
+        "src/omg/generation/losses/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/losses/contact.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/losses/fk.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/losses/motion.py": "3d02388cbdea2949df81df20146af6297ff14a2c912d7b6607ecc09ea8f7bd38",
+        "src/omg/generation/losses/terrain.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/metrics/__init__.py": "f686c86d57bab24aa1dd27cfae2bbab88757d7909e74cd7d4b9525a892ba025e",
+        "src/omg/generation/metrics/physical.py": "7aa2d8fc7d29b9d3ec836c3d23d0b5a7fc64a1eea5359c7300f6e6e191904f29",
+        "src/omg/generation/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/models/motion_generator.py": "f610e25b7b0d47a2c64f7446e300d653f528eb6f9f28c924619d726a19d8fe12",
+        "src/omg/motion/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/motion/feature_codec.py": "9501909eaea62778d8695cec22f81264fa83142f3ed2b5f2a7e419a6ad3bc6da",
+        "src/omg/motion/representation.py": "9e41d8fc546fafa070137046f42ffba98d69babad54c9c5f47ca4beb230ffb9f",
+        "src/omg/pipeline/__init__.py": "a8b51b2c5aa353d881c6f6ecea76065671f749bc35a35cab5111945a63da3b4d",
+        "src/omg/pipeline/checkpoint.py": "8b3476c1ee137d8af510e88a154ceb4f80a09a2565c9941e2a8fc6479d592ebd",
+        "src/omg/pipeline/cuda_graph.py": "d18f606d7520188e254e66ecbe6e2a06841128f8e8b461f01a1b486491deb3a4",
+        "src/omg/render/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/render/mujoco.py": "9fe80811cb8a648c7e30c21b134a64e7d8ae6313f8a3de6824b613b243c17df1",
+        "src/omg/robots/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/robots/g1/__init__.py": "dc46237fccb843612112274586e9e00dee6a0e472f4ce6b93da267b64f8f4c19",
+        "src/omg/robots/g1/constants.py": "59a685663c7816a177f590970925d831132abb7b577524ee58281cbc521dce78",
+        "src/omg/robots/g1/kinematics.py": "c8adbae0d96ef85ba948e27f1fb16bed35d8529c08a6d71d1943d31644585db4",
+        "src/omg/runtime/__init__.py": "9728869f63d93ada09a0f77fc10e98f2add27f4ab84e999d228becca102315fe",
+        "src/omg/runtime/checkpoint_io.py": "1b9ce178d3e5c1bba39c77d3098ea7e64788d8c81c48acdebaec09cc1be88e5e",
+        "src/omg/runtime/onnx_providers.py": "5ed87e442ebf9c56b4065fc011c89d7745ac5bf163158fbf0732db160d0e5673",
+        "src/omg/tracking/__init__.py": "15ff33834a2a3b1c24f1a5d1b927f63804c18aa771a8466b8434ab6748590f90",
+        "src/omg/tracking/holomotion/__init__.py": "a147a5f8e6d22c55a5754cc824f6df0bb2002b9d3da22d4aca8f319c3748135f",
+        "src/omg/tracking/holomotion/augmentation.py": "2a3f9523ab5aaa77a671462be8814a25f82393e3c0e7fb53de0260a75ae67f79",
+        "src/omg/tracking/holomotion/export_clip.py": "09030198d4d99ccd9b18a2b2fae47897252e3960918a14a712f46d04a03b802b",
+        "src/omg/tracking/holomotion/io.py": "643b0ba619d6693807259644bac38041b916288d0a4bbd0c522b3187fa8fed2a",
+        "src/omg/tracking/holomotion/reference.py": "1729eee9d0bdbe4393f6e091ce1067f8d4bc8584d70d5013685ff9426b4e0f0e",
+        "src/omg/tracking/holomotion/rollout.py": "13462ddf0aa2e3862c930b087369f8a463f633fc74c509b8b95e4c2731829afe",
+        "src/omg/tracking/holomotion/runner.py": "fb841bd0f617d02abdc2f30cd516309e2f2635ec1583347f8e275f3e67e7a66f",
+        "src/omg/tracking/holomotion/runtime.py": "0abb774974c7967e2051d1c5bc1ee3f5b4ed765d0d137d93a0daed94c0b85042",
+        "src/omg/tracking/holomotion/video.py": "4446b822280464c3fbb036538e47971b0737f7d6d109827ae4d25edefb448362",
+        "src/omg/utils/rotation_conversions.py": "cfa6ee96ba517367c8ab9729c18ed2a120d32243cd7a914470e997d101d7a7e2"
+      },
+      "asset_sha256": {
+        "checkpoint": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+        "tracker": "15f7914f6460a1c2e71bc06191874146e7b4d1669dded095e072cf29aac7c056",
+        "scene": "4e6ae5f0f1d6bee36242fa02c36da1999748f94fa4d2a013f72ca1379b56bd69",
+        "tracker_external": "040d92d87de126dcf6ddbbf89ee5c065ced28e14ee875c3c0f29fd8425c126e8"
+      }
+    },
+    {
+      "config": {
+        "checkpoint": "/root/leeky/omg-flow/selected/bones-native50-step190500.pt",
+        "prompt": "A person walks forward.",
+        "steps": 10,
+        "prefix_length": 25,
+        "replan_period": 0.2,
+        "text_encoder": "/root/leeky/projects/OMG-Posttrain/flow-ab-20261108/assets/t5-base-local",
+        "tracker": "/root/leeky/projects/OMG-Posttrain/deploy-assets/assets/tracker/model_16200_dynamic_batch.onnx",
+        "scene": "assets/holomotion/g1_29dof/scene_29dof.xml",
+        "standing_height": 0.79,
+        "duration": 20,
+        "seed": 1234,
+        "overrun": "log",
+        "pace": true,
+        "backend": "tensorrt-fp16",
+        "engine_cache": "tensorrt_engine_cache/flow_sync",
+        "lowpass_hz": 8.0
+      },
+      "gpu_uuid": "GPU-18dcfd2a-21e9-1c6e-7f0e-62559aeef036",
+      "physical_gpu": 2,
+      "initialization": "tracker default standing pose; no dataset history",
+      "selection": "all fixed cases and seeds; no retries selected by motion outcome",
+      "rendering": "generated reference | recorded MuJoCo execution, matched world camera, 25 fps, normal speed",
+      "source_sha256": {
+        "/root/leeky/projects/OMG-Flow-default-20261109/scripts/validation/sync_showcase.py": "4ed6e3e9fdf20361c1a70428095c2f3b408221f70cdf0148d15d3e528bc13178",
+        "deployment/check_sync_backend.py": "bf5d9459b8cb060b9c575281f9e1a94226960f23484d5fa1c0f3f0fbf6a39249",
+        "deployment/export_sync.py": "6bd8c9639821522692b038e90e8434409eaa0275e37e769d74d48607be74eefd",
+        "deployment/flow_trt.py": "03483fdf47443770921292199bbf1f045cba4ca238ccce9c96c4fa55862241a7",
+        "deployment/run_sync.py": "005a58e71f38dc2867316413d6ecfd1dfd5e65d8788e5ab02190379eb3aa269e",
+        "deployment/sync_flow.py": "bd936728e3fee1383072ab501e97b86a80ab67a4cfe86a742d5197b9c6040d8f",
+        "deployment/sync_robot.py": "5523cb7f8019c3b280f8f5fcd6e0a56779f73e85564a2e06d8941758e1d7e8ce",
+        "src/omg/__init__.py": "e06eff3bd6a146e0082518eb791164e26b80b548f9bdcd21c9f0aca1220bca34",
+        "src/omg/benchmarks/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/benchmarks/artifacts.py": "2e85c582754362143e66dd5898991099b8fed369d6cb6b9d75affba7d35a9f60",
+        "src/omg/benchmarks/evaluator/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/benchmarks/evaluator/motion_encoder.py": "2275910e10579425a43a282ff03909c20181c4cfb4d5e022dec0ec0445cba047",
+        "src/omg/benchmarks/evaluator/representation.py": "92d725fe76acf4f00a1777b967c594aafee7fdcd173d4eeb2de2a7cbf3a7cb39",
+        "src/omg/benchmarks/evaluator/retrieval.py": "5db50c6352cfb3a1cb4e39145d6f771ea922cf08df8f41ecb4c211a6738392c4",
+        "src/omg/benchmarks/evaluator/text_cache.py": "3a1a65ac10e300f1d05fb867e02cb9c1c03daff29a5e6bba05fecb98d75f2504",
+        "src/omg/benchmarks/evaluator/text_encoder.py": "4dde1c33d222707bdf63c2d96ee54e2361e2a6802aaf333126256d8af2f81332",
+        "src/omg/benchmarks/lerobot.py": "1fa56614125047db8f8145a79fb8fe9adee1f64a98564c1665cbd727197c3c00",
+        "src/omg/benchmarks/metrics/__init__.py": "a66a012504ee6a3583eb0c50c47dbfed6b3f6480d4fd859f7343e2265ef5e110",
+        "src/omg/benchmarks/metrics/audio.py": "08f9b0bb39b29e70b7db3d2d6feb7069367ecfe7fdfc7652e1f9fdfdfe9407a8",
+        "src/omg/benchmarks/metrics/distribution.py": "55c028f7c6d690ee84f8fc89b32e468f93df638eca76fb3cb6c3084ddd557750",
+        "src/omg/benchmarks/metrics/text.py": "0043f0def1ffcac642b46497a6d8617d962a73b99b6487c6611f4679786babd2",
+        "src/omg/benchmarks/metrics/tracking.py": "d34f911b72606ca64fc2671209b82b2ec2f4e61e683164c7a267a94979918d28",
+        "src/omg/benchmarks/metrics/transition.py": "db08610de77f01826d3764232b45d5b4c7126f935f2077aa1370bfe3fa8bbe13",
+        "src/omg/benchmarks/protocol.py": "e7dd93e261f551d1e1c03ec33b49a0c3622e3c8d608c2c5441d668ce00e85219",
+        "src/omg/benchmarks/report.py": "0777c31ad485fc4ec38105c7f902ab60228c2660387ef6d80a4a590e0b66d091",
+        "src/omg/benchmarks/runners/__init__.py": "5a1ae2c820aafdf0fdb26246944912bccb01d60f1e904477aca73d77519425e1",
+        "src/omg/benchmarks/runners/artifact.py": "5b1706d90dc7bf77703e424324e3d849fff7ee8b5642e153d90c58dabbe630e0",
+        "src/omg/benchmarks/runners/audio.py": "6d94ea1fec0b112e4be9cfcb0f17dccdb7a0c5ed00899c734ca53a4dffce698d",
+        "src/omg/benchmarks/runners/common.py": "713b54355caf8ddbd5b4e4d8be8de374c2301229db69cd6e86ad0dbf92183b5f",
+        "src/omg/benchmarks/runners/h2h_retarget.py": "18133e6efafeeb1a6a18b6d419cb3c78f14247dd9baf87070cf66dd80c32b12d",
+        "src/omg/benchmarks/runners/humanref.py": "d1feccd1fa0c0083708fa07765dec5c74a55c478747cf7e97851db35d86cb039",
+        "src/omg/benchmarks/runners/text.py": "203f34643bfde5647b4fb3d8a76aa065306694a2f6e4c88da381db9bbea3bf3a",
+        "src/omg/benchmarks/runners/tracker_executed.py": "c867b3c440963294bcdd0a4ae4c0fa533b32fdfd9f81ca96dabc0efd6598dc02",
+        "src/omg/benchmarks/sharded_artifacts.py": "39d31fdd2ca4a6335c334bdd094f249c79e9567fe4f1b606b48e4889edaa43c4",
+        "src/omg/callbacks/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/callbacks/divergence_guard.py": "c1ec2773dddda3bd800247bca0abd3eca46aeae3c78ebae8050b98739292b61a",
+        "src/omg/callbacks/fixed_motion_eval.py": "ab0bba0022dc5978bec6c3c51bf1aec2c412ce50b542822fd9c1ca49df23a84b",
+        "src/omg/callbacks/global_step_progress.py": "bd21180de0140a38fa2601f51b56c94aef346c757c140786e88b907720f3eb15",
+        "src/omg/callbacks/grad_norm.py": "c41e7e0bac01c984c85c38baf6de4b9e10ded95875a79ddc1c9d85ded5b9b742",
+        "src/omg/callbacks/speed_timer.py": "29ae0ec76a0545576bc31f240a4beab74f5c5e9ae50a0078c1ed46b8326fc360",
+        "src/omg/callbacks/training_diagnostics.py": "6e348e5cca9e690379cdb7a3364678b666d7c53d0a7405d5269ca713574a6917",
+        "src/omg/cli/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/cli/data/__init__.py": "052be341b9c1b05585d3a27073a741d768974cfdb2a91659a687ed1d3d6291f9",
+        "src/omg/cli/data/bones_stats.py": "bdb72d42e608863850cc15bdad5ca5681d9318d04b80fd564ee87ef6248c1bf3",
+        "src/omg/cli/data/cache_bones_text.py": "07e6812043ee6157c65655969b174748ff5cff3282ad459f5969d27585894f08",
+        "src/omg/cli/data/materialize_episode_cache.py": "94df52cd9351e7185cc092f9c8f978b506867ae90c1f123cb28c6e3c6c7f7326",
+        "src/omg/cli/data/resample_release.py": "1f1e0163a6c35565d3beda6cbfa0992f3e3bce57a75142255789ec3917357b9c",
+        "src/omg/cli/data/validate_episode_cache.py": "6840e28c774964583d88c6402c201ab36c0150ec67139403a66782364173c878",
+        "src/omg/cli/data/validate_resampled_release.py": "80ee47c98ce54aa2c6831bc124daf239a7d801f036deb90612f37784e673626b",
+        "src/omg/cli/evaluation/__init__.py": "83427993d56f4c67037ae91508269b1c2a90b4b3a7c2d383c64698ceeacb4788",
+        "src/omg/cli/evaluation/prepare_samples.py": "ff839b19b5809a00429f3e553c45d5bc7769f2dc7eb3eb14d53bdfe3c84f4ed9",
+        "src/omg/cli/generation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/cli/generation/benchmark.py": "ff813f344953da4b02388837f5a510230f8d4430393a88f205261faaf28c5dee",
+        "src/omg/cli/generation/compute_stats.py": "4bf677fb31cf8aa0ccef2360a2cab51f4f3916cc14e3cef32c276d87b2ea3e4c",
+        "src/omg/cli/generation/export_onnx.py": "8107e5b4e4674adf4b9ae843ac668e72949ea61afaf169609d5a4a29835f6529",
+        "src/omg/cli/generation/generate.py": "e5fda6aa998c7f9c842e979590b83eced66b1eab9e305fd5021d5739188059c6",
+        "src/omg/cli/generation/physical_benchmark.py": "f73cad25805ec2640910f82e8a2f97049fd614d8a7ff9effa1e5c853dbcfa133",
+        "src/omg/cli/generation/train.py": "2809f5f9b932412ee3bae46d1dc356ce539631ddd390f90339564c0284bdf67d",
+        "src/omg/cli/generation/train_diffusion.py": "a39cc0c6cfccd7b6660bbd9ab4f88f90bc634bb95ce30e22492c8a6cb74a7c8c",
+        "src/omg/cli/tracking/__init__.py": "3e88d2e630d58804989004a30611d317a20fd1f93a1ae6e5d45421ca72d29b60",
+        "src/omg/cli/tracking/export_holomotion_clip.py": "a9aba1a1709680e7403b106f2f6d8a28b41c1e83aa2e5b95fddb60a0f4eb2899",
+        "src/omg/cli/tracking/holomotion.py": "3bb01dd8b5668e62583cb0d4f43863617e15694037197e37490ced3f56bb00e5",
+        "src/omg/core/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/core/logging.py": "86c57564f7d8614d71d95e0ce377724642c8c3aa44501d9c317c33bf9ba7dce7",
+        "src/omg/core/paths.py": "6bb254b7219e70b58fc8581479857bfb7ee77a9f8937faf5dcec784dd1173a4d",
+        "src/omg/core/tensor.py": "998e6f24948983c15f3257f055a452e07b96cc0f13b357cb4881f4545bddb7d0",
+        "src/omg/data/__init__.py": "4e8cd9d824b5b834a673011d1cd95cf0227a1deb60ee917ba85ec364d51db21f",
+        "src/omg/data/bones.py": "70fb8cb728c5d667df9974affe418b73e4b05822169221a7f6c3a693d79ff8a3",
+        "src/omg/data/bones_prepare.py": "f37baad422fbc1ad679f30d9a728082bb4998310208f487b1b1f168403a2aea0",
+        "src/omg/data/datamodule.py": "52849ff2c870f2a40ccdefb1c0a0923300b08fa3b7c4dec2ada6125a6db77583",
+        "src/omg/data/episode_cache.py": "149738e95fcd3ebbcf0472630849273f351960160ec378425c443fbee7a97313",
+        "src/omg/data/episode_cache_inspect.py": "d3629bc09eb4db408191c54bccb9b12ef2cb6e28694bbc5bec0fdc440271d8c3",
+        "src/omg/data/lerobot_dataset.py": "8bee8c856993491416f9d30041007246c0ceef5a75aa60861b9007b1bda5054f",
+        "src/omg/data/windowing.py": "88710f0c24d6c696670b702b9ce77609c59acd2106389fa769a00d39a98f2afb",
+        "src/omg/generation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/architecture.py": "cef9472276b722f1ee5e0d095b5ad852f444e525e60910593d93282824bcec14",
+        "src/omg/generation/bones_text.py": "159588c6e84620a587e69e2214bc6e863021b54b934489a58e2f7e33d4f82d92",
+        "src/omg/generation/conditions/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/conditions/position.py": "5e19e700292e19ddae715fe7f6d7d172637f25b3d15febb01e47258eaf65b9c2",
+        "src/omg/generation/conditions/t5.py": "a2d37a2491f33df9b85aafc25518ef4b51e21e729a54c26e93a5c68f628d9bfe",
+        "src/omg/generation/denoisers/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/denoisers/interface.py": "c1f8b5f2a93e6cf0a4b5df730f9f744c95d9b58bc5245e3cb15176a61065e1dd",
+        "src/omg/generation/denoisers/transformer.py": "be9533c2aecf34df7d3301b74480dd7eb2cd8d2453d8339c25459755a1edff8d",
+        "src/omg/generation/diffusion/__init__.py": "fab4af0ec5b7b38892ffb309d6073841de00f8f37e5b4c2da1657e1b30c92e1c",
+        "src/omg/generation/diffusion/forcing.py": "4238148a7a7e5122d139fe348b0e16ea3faeb93c0e3392b78994dbe689f46116",
+        "src/omg/generation/diffusion/guided.py": "9519e3ea1bf0fd1b6dcece52815e541f68a081fc9933d2e8bf435f6b3866ecc8",
+        "src/omg/generation/diffusion/objectives.py": "db05bcbc32268e5d21298e19130e9e8f4b23eff7d1b679886306cd7c94195675",
+        "src/omg/generation/diffusion/schedules.py": "a06c3f3ab1d81e07f680d44f8fb9ef56e8bd2a6e4c5e4ac911c316217f6e92e0",
+        "src/omg/generation/export/__init__.py": "0ee7ed60aa43848dad0a4ba0e5dd29d815aab6dc37f4ae1c46d8e56a2ebc1770",
+        "src/omg/generation/export/onnx.py": "8b98b72579eb8f491b66b68b5b0a41a5b0fe3163c421d23cde9dcab5dc45c5a5",
+        "src/omg/generation/flow.py": "92af93432a37e8e8fc998c5ad8accdf8c63203bcb49f4b63ab3c92b658a907aa",
+        "src/omg/generation/flow_reference.py": "d64c0ea786d55a6aa0ad8fe2adf18bd7352bceacd16b94f570a63d5cf2e354ee",
+        "src/omg/generation/flow_seam.py": "16d77fd037322302d15989ca4b88d9438154e0735f3f453fbbb8e9603996fd0c",
+        "src/omg/generation/losses/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/losses/contact.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/losses/fk.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/losses/motion.py": "3d02388cbdea2949df81df20146af6297ff14a2c912d7b6607ecc09ea8f7bd38",
+        "src/omg/generation/losses/terrain.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/metrics/__init__.py": "f686c86d57bab24aa1dd27cfae2bbab88757d7909e74cd7d4b9525a892ba025e",
+        "src/omg/generation/metrics/physical.py": "7aa2d8fc7d29b9d3ec836c3d23d0b5a7fc64a1eea5359c7300f6e6e191904f29",
+        "src/omg/generation/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/models/motion_generator.py": "f610e25b7b0d47a2c64f7446e300d653f528eb6f9f28c924619d726a19d8fe12",
+        "src/omg/motion/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/motion/feature_codec.py": "9501909eaea62778d8695cec22f81264fa83142f3ed2b5f2a7e419a6ad3bc6da",
+        "src/omg/motion/representation.py": "9e41d8fc546fafa070137046f42ffba98d69babad54c9c5f47ca4beb230ffb9f",
+        "src/omg/pipeline/__init__.py": "a8b51b2c5aa353d881c6f6ecea76065671f749bc35a35cab5111945a63da3b4d",
+        "src/omg/pipeline/checkpoint.py": "8b3476c1ee137d8af510e88a154ceb4f80a09a2565c9941e2a8fc6479d592ebd",
+        "src/omg/pipeline/cuda_graph.py": "d18f606d7520188e254e66ecbe6e2a06841128f8e8b461f01a1b486491deb3a4",
+        "src/omg/render/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/render/mujoco.py": "9fe80811cb8a648c7e30c21b134a64e7d8ae6313f8a3de6824b613b243c17df1",
+        "src/omg/robots/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/robots/g1/__init__.py": "dc46237fccb843612112274586e9e00dee6a0e472f4ce6b93da267b64f8f4c19",
+        "src/omg/robots/g1/constants.py": "59a685663c7816a177f590970925d831132abb7b577524ee58281cbc521dce78",
+        "src/omg/robots/g1/kinematics.py": "c8adbae0d96ef85ba948e27f1fb16bed35d8529c08a6d71d1943d31644585db4",
+        "src/omg/runtime/__init__.py": "9728869f63d93ada09a0f77fc10e98f2add27f4ab84e999d228becca102315fe",
+        "src/omg/runtime/checkpoint_io.py": "1b9ce178d3e5c1bba39c77d3098ea7e64788d8c81c48acdebaec09cc1be88e5e",
+        "src/omg/runtime/onnx_providers.py": "5ed87e442ebf9c56b4065fc011c89d7745ac5bf163158fbf0732db160d0e5673",
+        "src/omg/tracking/__init__.py": "15ff33834a2a3b1c24f1a5d1b927f63804c18aa771a8466b8434ab6748590f90",
+        "src/omg/tracking/holomotion/__init__.py": "a147a5f8e6d22c55a5754cc824f6df0bb2002b9d3da22d4aca8f319c3748135f",
+        "src/omg/tracking/holomotion/augmentation.py": "2a3f9523ab5aaa77a671462be8814a25f82393e3c0e7fb53de0260a75ae67f79",
+        "src/omg/tracking/holomotion/export_clip.py": "09030198d4d99ccd9b18a2b2fae47897252e3960918a14a712f46d04a03b802b",
+        "src/omg/tracking/holomotion/io.py": "643b0ba619d6693807259644bac38041b916288d0a4bbd0c522b3187fa8fed2a",
+        "src/omg/tracking/holomotion/reference.py": "1729eee9d0bdbe4393f6e091ce1067f8d4bc8584d70d5013685ff9426b4e0f0e",
+        "src/omg/tracking/holomotion/rollout.py": "13462ddf0aa2e3862c930b087369f8a463f633fc74c509b8b95e4c2731829afe",
+        "src/omg/tracking/holomotion/runner.py": "fb841bd0f617d02abdc2f30cd516309e2f2635ec1583347f8e275f3e67e7a66f",
+        "src/omg/tracking/holomotion/runtime.py": "0abb774974c7967e2051d1c5bc1ee3f5b4ed765d0d137d93a0daed94c0b85042",
+        "src/omg/tracking/holomotion/video.py": "4446b822280464c3fbb036538e47971b0737f7d6d109827ae4d25edefb448362",
+        "src/omg/utils/rotation_conversions.py": "cfa6ee96ba517367c8ab9729c18ed2a120d32243cd7a914470e997d101d7a7e2"
+      },
+      "asset_sha256": {
+        "checkpoint": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+        "tracker": "15f7914f6460a1c2e71bc06191874146e7b4d1669dded095e072cf29aac7c056",
+        "scene": "4e6ae5f0f1d6bee36242fa02c36da1999748f94fa4d2a013f72ca1379b56bd69",
+        "tracker_external": "040d92d87de126dcf6ddbbf89ee5c065ced28e14ee875c3c0f29fd8425c126e8"
+      }
+    },
+    {
+      "config": {
+        "checkpoint": "/root/leeky/omg-flow/selected/bones-native50-step190500.pt",
+        "prompt": "A person walks forward.",
+        "steps": 10,
+        "prefix_length": 25,
+        "replan_period": 0.2,
+        "text_encoder": "/root/leeky/projects/OMG-Posttrain/flow-ab-20261108/assets/t5-base-local",
+        "tracker": "/root/leeky/projects/OMG-Posttrain/deploy-assets/assets/tracker/model_16200_dynamic_batch.onnx",
+        "scene": "assets/holomotion/g1_29dof/scene_29dof.xml",
+        "standing_height": 0.79,
+        "duration": 20,
+        "seed": 1234,
+        "overrun": "log",
+        "pace": true,
+        "backend": "tensorrt-fp16",
+        "engine_cache": "tensorrt_engine_cache/flow_sync",
+        "lowpass_hz": 8.0
+      },
+      "gpu_uuid": "GPU-cb47a071-d469-74c3-3693-6015b2ec3591",
+      "physical_gpu": 1,
+      "initialization": "tracker default standing pose; no dataset history",
+      "selection": "all fixed cases and seeds; no retries selected by motion outcome",
+      "rendering": "generated reference | recorded MuJoCo execution, matched world camera, 25 fps, normal speed",
+      "source_sha256": {
+        "/root/leeky/projects/OMG-Flow-default-20261109/scripts/validation/sync_showcase.py": "4ed6e3e9fdf20361c1a70428095c2f3b408221f70cdf0148d15d3e528bc13178",
+        "deployment/check_sync_backend.py": "bf5d9459b8cb060b9c575281f9e1a94226960f23484d5fa1c0f3f0fbf6a39249",
+        "deployment/export_sync.py": "6bd8c9639821522692b038e90e8434409eaa0275e37e769d74d48607be74eefd",
+        "deployment/flow_trt.py": "03483fdf47443770921292199bbf1f045cba4ca238ccce9c96c4fa55862241a7",
+        "deployment/run_sync.py": "005a58e71f38dc2867316413d6ecfd1dfd5e65d8788e5ab02190379eb3aa269e",
+        "deployment/sync_flow.py": "bd936728e3fee1383072ab501e97b86a80ab67a4cfe86a742d5197b9c6040d8f",
+        "deployment/sync_robot.py": "5523cb7f8019c3b280f8f5fcd6e0a56779f73e85564a2e06d8941758e1d7e8ce",
+        "src/omg/__init__.py": "e06eff3bd6a146e0082518eb791164e26b80b548f9bdcd21c9f0aca1220bca34",
+        "src/omg/benchmarks/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/benchmarks/artifacts.py": "2e85c582754362143e66dd5898991099b8fed369d6cb6b9d75affba7d35a9f60",
+        "src/omg/benchmarks/evaluator/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/benchmarks/evaluator/motion_encoder.py": "2275910e10579425a43a282ff03909c20181c4cfb4d5e022dec0ec0445cba047",
+        "src/omg/benchmarks/evaluator/representation.py": "92d725fe76acf4f00a1777b967c594aafee7fdcd173d4eeb2de2a7cbf3a7cb39",
+        "src/omg/benchmarks/evaluator/retrieval.py": "5db50c6352cfb3a1cb4e39145d6f771ea922cf08df8f41ecb4c211a6738392c4",
+        "src/omg/benchmarks/evaluator/text_cache.py": "3a1a65ac10e300f1d05fb867e02cb9c1c03daff29a5e6bba05fecb98d75f2504",
+        "src/omg/benchmarks/evaluator/text_encoder.py": "4dde1c33d222707bdf63c2d96ee54e2361e2a6802aaf333126256d8af2f81332",
+        "src/omg/benchmarks/lerobot.py": "1fa56614125047db8f8145a79fb8fe9adee1f64a98564c1665cbd727197c3c00",
+        "src/omg/benchmarks/metrics/__init__.py": "a66a012504ee6a3583eb0c50c47dbfed6b3f6480d4fd859f7343e2265ef5e110",
+        "src/omg/benchmarks/metrics/audio.py": "08f9b0bb39b29e70b7db3d2d6feb7069367ecfe7fdfc7652e1f9fdfdfe9407a8",
+        "src/omg/benchmarks/metrics/distribution.py": "55c028f7c6d690ee84f8fc89b32e468f93df638eca76fb3cb6c3084ddd557750",
+        "src/omg/benchmarks/metrics/text.py": "0043f0def1ffcac642b46497a6d8617d962a73b99b6487c6611f4679786babd2",
+        "src/omg/benchmarks/metrics/tracking.py": "d34f911b72606ca64fc2671209b82b2ec2f4e61e683164c7a267a94979918d28",
+        "src/omg/benchmarks/metrics/transition.py": "db08610de77f01826d3764232b45d5b4c7126f935f2077aa1370bfe3fa8bbe13",
+        "src/omg/benchmarks/protocol.py": "e7dd93e261f551d1e1c03ec33b49a0c3622e3c8d608c2c5441d668ce00e85219",
+        "src/omg/benchmarks/report.py": "0777c31ad485fc4ec38105c7f902ab60228c2660387ef6d80a4a590e0b66d091",
+        "src/omg/benchmarks/runners/__init__.py": "5a1ae2c820aafdf0fdb26246944912bccb01d60f1e904477aca73d77519425e1",
+        "src/omg/benchmarks/runners/artifact.py": "5b1706d90dc7bf77703e424324e3d849fff7ee8b5642e153d90c58dabbe630e0",
+        "src/omg/benchmarks/runners/audio.py": "6d94ea1fec0b112e4be9cfcb0f17dccdb7a0c5ed00899c734ca53a4dffce698d",
+        "src/omg/benchmarks/runners/common.py": "713b54355caf8ddbd5b4e4d8be8de374c2301229db69cd6e86ad0dbf92183b5f",
+        "src/omg/benchmarks/runners/h2h_retarget.py": "18133e6efafeeb1a6a18b6d419cb3c78f14247dd9baf87070cf66dd80c32b12d",
+        "src/omg/benchmarks/runners/humanref.py": "d1feccd1fa0c0083708fa07765dec5c74a55c478747cf7e97851db35d86cb039",
+        "src/omg/benchmarks/runners/text.py": "203f34643bfde5647b4fb3d8a76aa065306694a2f6e4c88da381db9bbea3bf3a",
+        "src/omg/benchmarks/runners/tracker_executed.py": "c867b3c440963294bcdd0a4ae4c0fa533b32fdfd9f81ca96dabc0efd6598dc02",
+        "src/omg/benchmarks/sharded_artifacts.py": "39d31fdd2ca4a6335c334bdd094f249c79e9567fe4f1b606b48e4889edaa43c4",
+        "src/omg/callbacks/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/callbacks/divergence_guard.py": "c1ec2773dddda3bd800247bca0abd3eca46aeae3c78ebae8050b98739292b61a",
+        "src/omg/callbacks/fixed_motion_eval.py": "ab0bba0022dc5978bec6c3c51bf1aec2c412ce50b542822fd9c1ca49df23a84b",
+        "src/omg/callbacks/global_step_progress.py": "bd21180de0140a38fa2601f51b56c94aef346c757c140786e88b907720f3eb15",
+        "src/omg/callbacks/grad_norm.py": "c41e7e0bac01c984c85c38baf6de4b9e10ded95875a79ddc1c9d85ded5b9b742",
+        "src/omg/callbacks/speed_timer.py": "29ae0ec76a0545576bc31f240a4beab74f5c5e9ae50a0078c1ed46b8326fc360",
+        "src/omg/callbacks/training_diagnostics.py": "6e348e5cca9e690379cdb7a3364678b666d7c53d0a7405d5269ca713574a6917",
+        "src/omg/cli/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/cli/data/__init__.py": "052be341b9c1b05585d3a27073a741d768974cfdb2a91659a687ed1d3d6291f9",
+        "src/omg/cli/data/bones_stats.py": "bdb72d42e608863850cc15bdad5ca5681d9318d04b80fd564ee87ef6248c1bf3",
+        "src/omg/cli/data/cache_bones_text.py": "07e6812043ee6157c65655969b174748ff5cff3282ad459f5969d27585894f08",
+        "src/omg/cli/data/materialize_episode_cache.py": "94df52cd9351e7185cc092f9c8f978b506867ae90c1f123cb28c6e3c6c7f7326",
+        "src/omg/cli/data/resample_release.py": "1f1e0163a6c35565d3beda6cbfa0992f3e3bce57a75142255789ec3917357b9c",
+        "src/omg/cli/data/validate_episode_cache.py": "6840e28c774964583d88c6402c201ab36c0150ec67139403a66782364173c878",
+        "src/omg/cli/data/validate_resampled_release.py": "80ee47c98ce54aa2c6831bc124daf239a7d801f036deb90612f37784e673626b",
+        "src/omg/cli/evaluation/__init__.py": "83427993d56f4c67037ae91508269b1c2a90b4b3a7c2d383c64698ceeacb4788",
+        "src/omg/cli/evaluation/prepare_samples.py": "ff839b19b5809a00429f3e553c45d5bc7769f2dc7eb3eb14d53bdfe3c84f4ed9",
+        "src/omg/cli/generation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/cli/generation/benchmark.py": "ff813f344953da4b02388837f5a510230f8d4430393a88f205261faaf28c5dee",
+        "src/omg/cli/generation/compute_stats.py": "4bf677fb31cf8aa0ccef2360a2cab51f4f3916cc14e3cef32c276d87b2ea3e4c",
+        "src/omg/cli/generation/export_onnx.py": "8107e5b4e4674adf4b9ae843ac668e72949ea61afaf169609d5a4a29835f6529",
+        "src/omg/cli/generation/generate.py": "e5fda6aa998c7f9c842e979590b83eced66b1eab9e305fd5021d5739188059c6",
+        "src/omg/cli/generation/physical_benchmark.py": "f73cad25805ec2640910f82e8a2f97049fd614d8a7ff9effa1e5c853dbcfa133",
+        "src/omg/cli/generation/train.py": "2809f5f9b932412ee3bae46d1dc356ce539631ddd390f90339564c0284bdf67d",
+        "src/omg/cli/generation/train_diffusion.py": "a39cc0c6cfccd7b6660bbd9ab4f88f90bc634bb95ce30e22492c8a6cb74a7c8c",
+        "src/omg/cli/tracking/__init__.py": "3e88d2e630d58804989004a30611d317a20fd1f93a1ae6e5d45421ca72d29b60",
+        "src/omg/cli/tracking/export_holomotion_clip.py": "a9aba1a1709680e7403b106f2f6d8a28b41c1e83aa2e5b95fddb60a0f4eb2899",
+        "src/omg/cli/tracking/holomotion.py": "3bb01dd8b5668e62583cb0d4f43863617e15694037197e37490ced3f56bb00e5",
+        "src/omg/core/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/core/logging.py": "86c57564f7d8614d71d95e0ce377724642c8c3aa44501d9c317c33bf9ba7dce7",
+        "src/omg/core/paths.py": "6bb254b7219e70b58fc8581479857bfb7ee77a9f8937faf5dcec784dd1173a4d",
+        "src/omg/core/tensor.py": "998e6f24948983c15f3257f055a452e07b96cc0f13b357cb4881f4545bddb7d0",
+        "src/omg/data/__init__.py": "4e8cd9d824b5b834a673011d1cd95cf0227a1deb60ee917ba85ec364d51db21f",
+        "src/omg/data/bones.py": "70fb8cb728c5d667df9974affe418b73e4b05822169221a7f6c3a693d79ff8a3",
+        "src/omg/data/bones_prepare.py": "f37baad422fbc1ad679f30d9a728082bb4998310208f487b1b1f168403a2aea0",
+        "src/omg/data/datamodule.py": "52849ff2c870f2a40ccdefb1c0a0923300b08fa3b7c4dec2ada6125a6db77583",
+        "src/omg/data/episode_cache.py": "149738e95fcd3ebbcf0472630849273f351960160ec378425c443fbee7a97313",
+        "src/omg/data/episode_cache_inspect.py": "d3629bc09eb4db408191c54bccb9b12ef2cb6e28694bbc5bec0fdc440271d8c3",
+        "src/omg/data/lerobot_dataset.py": "8bee8c856993491416f9d30041007246c0ceef5a75aa60861b9007b1bda5054f",
+        "src/omg/data/windowing.py": "88710f0c24d6c696670b702b9ce77609c59acd2106389fa769a00d39a98f2afb",
+        "src/omg/generation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/architecture.py": "cef9472276b722f1ee5e0d095b5ad852f444e525e60910593d93282824bcec14",
+        "src/omg/generation/bones_text.py": "159588c6e84620a587e69e2214bc6e863021b54b934489a58e2f7e33d4f82d92",
+        "src/omg/generation/conditions/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/conditions/position.py": "5e19e700292e19ddae715fe7f6d7d172637f25b3d15febb01e47258eaf65b9c2",
+        "src/omg/generation/conditions/t5.py": "a2d37a2491f33df9b85aafc25518ef4b51e21e729a54c26e93a5c68f628d9bfe",
+        "src/omg/generation/denoisers/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/denoisers/interface.py": "c1f8b5f2a93e6cf0a4b5df730f9f744c95d9b58bc5245e3cb15176a61065e1dd",
+        "src/omg/generation/denoisers/transformer.py": "be9533c2aecf34df7d3301b74480dd7eb2cd8d2453d8339c25459755a1edff8d",
+        "src/omg/generation/diffusion/__init__.py": "fab4af0ec5b7b38892ffb309d6073841de00f8f37e5b4c2da1657e1b30c92e1c",
+        "src/omg/generation/diffusion/forcing.py": "4238148a7a7e5122d139fe348b0e16ea3faeb93c0e3392b78994dbe689f46116",
+        "src/omg/generation/diffusion/guided.py": "9519e3ea1bf0fd1b6dcece52815e541f68a081fc9933d2e8bf435f6b3866ecc8",
+        "src/omg/generation/diffusion/objectives.py": "db05bcbc32268e5d21298e19130e9e8f4b23eff7d1b679886306cd7c94195675",
+        "src/omg/generation/diffusion/schedules.py": "a06c3f3ab1d81e07f680d44f8fb9ef56e8bd2a6e4c5e4ac911c316217f6e92e0",
+        "src/omg/generation/export/__init__.py": "0ee7ed60aa43848dad0a4ba0e5dd29d815aab6dc37f4ae1c46d8e56a2ebc1770",
+        "src/omg/generation/export/onnx.py": "8b98b72579eb8f491b66b68b5b0a41a5b0fe3163c421d23cde9dcab5dc45c5a5",
+        "src/omg/generation/flow.py": "92af93432a37e8e8fc998c5ad8accdf8c63203bcb49f4b63ab3c92b658a907aa",
+        "src/omg/generation/flow_reference.py": "d64c0ea786d55a6aa0ad8fe2adf18bd7352bceacd16b94f570a63d5cf2e354ee",
+        "src/omg/generation/flow_seam.py": "16d77fd037322302d15989ca4b88d9438154e0735f3f453fbbb8e9603996fd0c",
+        "src/omg/generation/losses/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/losses/contact.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/losses/fk.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/losses/motion.py": "3d02388cbdea2949df81df20146af6297ff14a2c912d7b6607ecc09ea8f7bd38",
+        "src/omg/generation/losses/terrain.py": "75927b00fc5584988f2ecedbcfbba9af3ba80206966b0a91642ec133db5e4267",
+        "src/omg/generation/metrics/__init__.py": "f686c86d57bab24aa1dd27cfae2bbab88757d7909e74cd7d4b9525a892ba025e",
+        "src/omg/generation/metrics/physical.py": "7aa2d8fc7d29b9d3ec836c3d23d0b5a7fc64a1eea5359c7300f6e6e191904f29",
+        "src/omg/generation/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/generation/models/motion_generator.py": "f610e25b7b0d47a2c64f7446e300d653f528eb6f9f28c924619d726a19d8fe12",
+        "src/omg/motion/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/motion/feature_codec.py": "9501909eaea62778d8695cec22f81264fa83142f3ed2b5f2a7e419a6ad3bc6da",
+        "src/omg/motion/representation.py": "9e41d8fc546fafa070137046f42ffba98d69babad54c9c5f47ca4beb230ffb9f",
+        "src/omg/pipeline/__init__.py": "a8b51b2c5aa353d881c6f6ecea76065671f749bc35a35cab5111945a63da3b4d",
+        "src/omg/pipeline/checkpoint.py": "8b3476c1ee137d8af510e88a154ceb4f80a09a2565c9941e2a8fc6479d592ebd",
+        "src/omg/pipeline/cuda_graph.py": "d18f606d7520188e254e66ecbe6e2a06841128f8e8b461f01a1b486491deb3a4",
+        "src/omg/render/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/render/mujoco.py": "9fe80811cb8a648c7e30c21b134a64e7d8ae6313f8a3de6824b613b243c17df1",
+        "src/omg/robots/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "src/omg/robots/g1/__init__.py": "dc46237fccb843612112274586e9e00dee6a0e472f4ce6b93da267b64f8f4c19",
+        "src/omg/robots/g1/constants.py": "59a685663c7816a177f590970925d831132abb7b577524ee58281cbc521dce78",
+        "src/omg/robots/g1/kinematics.py": "c8adbae0d96ef85ba948e27f1fb16bed35d8529c08a6d71d1943d31644585db4",
+        "src/omg/runtime/__init__.py": "9728869f63d93ada09a0f77fc10e98f2add27f4ab84e999d228becca102315fe",
+        "src/omg/runtime/checkpoint_io.py": "1b9ce178d3e5c1bba39c77d3098ea7e64788d8c81c48acdebaec09cc1be88e5e",
+        "src/omg/runtime/onnx_providers.py": "5ed87e442ebf9c56b4065fc011c89d7745ac5bf163158fbf0732db160d0e5673",
+        "src/omg/tracking/__init__.py": "15ff33834a2a3b1c24f1a5d1b927f63804c18aa771a8466b8434ab6748590f90",
+        "src/omg/tracking/holomotion/__init__.py": "a147a5f8e6d22c55a5754cc824f6df0bb2002b9d3da22d4aca8f319c3748135f",
+        "src/omg/tracking/holomotion/augmentation.py": "2a3f9523ab5aaa77a671462be8814a25f82393e3c0e7fb53de0260a75ae67f79",
+        "src/omg/tracking/holomotion/export_clip.py": "09030198d4d99ccd9b18a2b2fae47897252e3960918a14a712f46d04a03b802b",
+        "src/omg/tracking/holomotion/io.py": "643b0ba619d6693807259644bac38041b916288d0a4bbd0c522b3187fa8fed2a",
+        "src/omg/tracking/holomotion/reference.py": "1729eee9d0bdbe4393f6e091ce1067f8d4bc8584d70d5013685ff9426b4e0f0e",
+        "src/omg/tracking/holomotion/rollout.py": "13462ddf0aa2e3862c930b087369f8a463f633fc74c509b8b95e4c2731829afe",
+        "src/omg/tracking/holomotion/runner.py": "fb841bd0f617d02abdc2f30cd516309e2f2635ec1583347f8e275f3e67e7a66f",
+        "src/omg/tracking/holomotion/runtime.py": "0abb774974c7967e2051d1c5bc1ee3f5b4ed765d0d137d93a0daed94c0b85042",
+        "src/omg/tracking/holomotion/video.py": "4446b822280464c3fbb036538e47971b0737f7d6d109827ae4d25edefb448362",
+        "src/omg/utils/rotation_conversions.py": "cfa6ee96ba517367c8ab9729c18ed2a120d32243cd7a914470e997d101d7a7e2"
+      },
+      "asset_sha256": {
+        "checkpoint": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+        "tracker": "15f7914f6460a1c2e71bc06191874146e7b4d1669dded095e072cf29aac7c056",
+        "scene": "4e6ae5f0f1d6bee36242fa02c36da1999748f94fa4d2a013f72ca1379b56bd69",
+        "tracker_external": "040d92d87de126dcf6ddbbf89ee5c065ced28e14ee875c3c0f29fd8425c126e8"
+      }
+    }
+  ],
   "clips": [
     {
       "name": "dance",
-      "case": {
-        "category": "dance",
+      "prompt": "person performs four reps of a complex dance choreography in one place",
+      "seed": 2345,
+      "duration": 20.0,
+      "original_source": {
         "clip_id": "dancing_routine_opt_2_001__A039",
-        "caption": "person performs four reps of a complex dance choreography in one place",
-        "seed": 2345,
-        "offset": 49805043,
-        "frames": 1241
+        "offset": 49805043
       },
       "metrics": {
-        "label": "best",
-        "case": 7,
-        "category": "dance",
-        "seed": 2345,
-        "seconds": 20.0,
         "first_failure_s": null,
-        "pelvis_min_m": 0.6956959366798401,
-        "joint_mae_rad": 0.061615850776433945,
-        "root_error_m": 0.050322357565164566,
-        "reference_joint_accel_mean": 16.046112060546875,
-        "seam_joint_accel_mean": 15.145140647888184,
-        "reference_root_height_min": 0.7058629989624023,
-        "reference_root_height_max": 0.7965432405471802,
-        "final_root_displacement_m": 0.024746740236878395
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7012263536453247,
+        "joint_rmse_rad": 0.09302866458892822,
+        "root_position_rmse_m": 0.05567668750882149,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 6.954199,
+          "p95": 7.0205081499999995,
+          "max": 9.944056
+        }
       },
-      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
-      "source_sha256": "18775bf58bbaebbe6aeed7daddc404a477143d75348e16774f2c83e98aea4616",
-      "preview_start_s": 4,
-      "preview_duration_s": 8,
-      "full_duration_s": 20,
-      "playback_speed": 1
+      "files": {
+        ".mp4": {
+          "bytes": 854231,
+          "sha256": "2b94e8d0e1e12ffb9946c8b9726192ee68040132fa201448c0f6c55880a55a24"
+        },
+        ".gif": {
+          "bytes": 892638,
+          "sha256": "8a3e033ecce8c6fce86208380850dafc97d377b8b7c18c8f3d83d4214e274040"
+        },
+        ".npz": {
+          "bytes": 378043,
+          "sha256": "272e82bb6fbb7d3d13124f60624bd7609e72281a85b1229886802c866d43423d"
+        },
+        ".json": {
+          "bytes": 449160,
+          "sha256": "bf2b767cf23584643df3ac395eb0415e36cb9423743eba8428bb7b8d1ac03315"
+        }
+      },
+      "run_index": 0,
+      "guard_log": "guards/queue-006-gpu2.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Upright small steps and arm motions; close tracking, but not the requested complex choreography."
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 854231,
+          "sha256": "2b94e8d0e1e12ffb9946c8b9726192ee68040132fa201448c0f6c55880a55a24"
+        },
+        ".gif": {
+          "bytes": 893196,
+          "sha256": "ec1a8e399a3504a22659aed7b9d2ee948eef46689b2c48aa2645cfd12ab80823"
+        },
+        ".npz": {
+          "bytes": 378043,
+          "sha256": "272e82bb6fbb7d3d13124f60624bd7609e72281a85b1229886802c866d43423d"
+        },
+        ".json": {
+          "bytes": 449160,
+          "sha256": "bf2b767cf23584643df3ac395eb0415e36cb9423743eba8428bb7b8d1ac03315"
+        }
+      }
     },
     {
       "name": "turn",
-      "case": {
-        "category": "turn",
+      "prompt": "individual in a neutral position makes a 90 degree turn to their left, stops, then repeats whole action many times",
+      "seed": 1234,
+      "duration": 20.0,
+      "original_source": {
         "clip_id": "idle_turn_090_R_long_002__A549",
-        "caption": "individual in a neutral position makes a 90 degree turn to their left, stops, then repeats whole action many times",
-        "seed": 1234,
-        "offset": 23894478,
-        "frames": 3629
+        "offset": 23894478
       },
       "metrics": {
-        "label": "best",
-        "case": 15,
-        "category": "turn",
-        "seed": 1234,
-        "seconds": 20.0,
         "first_failure_s": null,
-        "pelvis_min_m": 0.7712336182594299,
-        "joint_mae_rad": 0.06953877955675125,
-        "root_error_m": 0.0719938650727272,
-        "reference_joint_accel_mean": 13.259525299072266,
-        "seam_joint_accel_mean": 12.157273292541504,
-        "reference_root_height_min": 0.7660945057868958,
-        "reference_root_height_max": 0.7852722406387329,
-        "final_root_displacement_m": 0.0835818350315094
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7597900629043579,
+        "joint_rmse_rad": 0.0737965926527977,
+        "root_position_rmse_m": 0.03877696767449379,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 6.9699445,
+          "p95": 7.10777485,
+          "max": 9.52871
+        }
       },
-      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
-      "source_sha256": "095f6c3c006adb6436dd220d86cd9df245012cf31adc703c6a2b777b665090dc",
-      "preview_start_s": 0,
-      "preview_duration_s": 8,
-      "full_duration_s": 20,
-      "playback_speed": 1
+      "files": {
+        ".mp4": {
+          "bytes": 954636,
+          "sha256": "fcdcc323378c0ab5ba07f89a0ef3e706a199555a3b77e978f04e1ff72cb8edf2"
+        },
+        ".gif": {
+          "bytes": 1150522,
+          "sha256": "c2d4822eb5faae0e32d2a7450f090b3ad661d205d88f2a2553004b6b4c245016"
+        },
+        ".npz": {
+          "bytes": 377715,
+          "sha256": "c08c2e0c822ece3cf5b4ab06b7e2afdfa4ec5a9b49dac1d759504c071a123106"
+        },
+        ".json": {
+          "bytes": 449131,
+          "sha256": "2033c836d6a77d3522adcfeb0803230aa8797de8cc47e0ddbc19c795619891d6"
+        }
+      },
+      "run_index": 1,
+      "guard_log": "guards/queue-007-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Visible repeated turning with close reference/execution agreement; no fall in sampled frames."
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 954636,
+          "sha256": "fcdcc323378c0ab5ba07f89a0ef3e706a199555a3b77e978f04e1ff72cb8edf2"
+        },
+        ".gif": {
+          "bytes": 1158094,
+          "sha256": "37c7c221e1f4db02482ab37fbe26e89688dd66bbfd4a39185e578e5ad41eea1f"
+        },
+        ".npz": {
+          "bytes": 377715,
+          "sha256": "c08c2e0c822ece3cf5b4ab06b7e2afdfa4ec5a9b49dac1d759504c071a123106"
+        },
+        ".json": {
+          "bytes": 449131,
+          "sha256": "2033c836d6a77d3522adcfeb0803230aa8797de8cc47e0ddbc19c795619891d6"
+        }
+      }
     },
     {
       "name": "jump",
-      "case": {
-        "category": "jump",
+      "prompt": "a jump reaching upwards as high as possible",
+      "seed": 1234,
+      "duration": 20.0,
+      "original_source": {
         "clip_id": "reach_jump_R_002__A217",
-        "caption": "a jump reaching upwards as high as possible",
-        "seed": 1234,
-        "offset": 4064345,
-        "frames": 717
+        "offset": 4064345
       },
       "metrics": {
-        "label": "best",
-        "case": 12,
-        "category": "jump",
-        "seed": 1234,
-        "seconds": 20.0,
         "first_failure_s": null,
-        "pelvis_min_m": 0.6607229709625244,
-        "joint_mae_rad": 0.0730743333697319,
-        "root_error_m": 0.143033966422081,
-        "reference_joint_accel_mean": 16.903573989868164,
-        "seam_joint_accel_mean": 14.25909423828125,
-        "reference_root_height_min": 0.6531980633735657,
-        "reference_root_height_max": 1.0298435688018799,
-        "final_root_displacement_m": 0.031978145241737366
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.6411861777305603,
+        "joint_rmse_rad": 0.09148488193750381,
+        "root_position_rmse_m": 0.17998501658439636,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 6.980388,
+          "p95": 7.10027935,
+          "max": 12.112155
+        }
       },
-      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
-      "source_sha256": "19019e5059fe02faa3ad8a3e987cf8e66f66766057372cc43ee508d5a9523c57",
-      "preview_start_s": 0,
-      "preview_duration_s": 8,
-      "full_duration_s": 20,
-      "playback_speed": 1
+      "files": {
+        ".mp4": {
+          "bytes": 737629,
+          "sha256": "e88fba816c0a23e79dcb4b1bc0a72eeb15855826497f423ff9f108e2f3d6505f"
+        },
+        ".gif": {
+          "bytes": 770167,
+          "sha256": "efa9eabb91e8cd01a588e6ae18ea31da5ce80e2cf5c32aaae90d01551b2b0fe1"
+        },
+        ".npz": {
+          "bytes": 376066,
+          "sha256": "476ae697e5c400618af0a7712012b272d4b508347d2dc3fa884824aff1925800"
+        },
+        ".json": {
+          "bytes": 449025,
+          "sha256": "a2a4277d8d9d4726dc632a89c59b890d3c01006252c55755dce7165183fae7ab"
+        }
+      },
+      "run_index": 1,
+      "guard_log": "guards/queue-007-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18,
+          8.2,
+          8.3
+        ],
+        "note": "Upward arm reach is visible; reference pelvis peaks at 1.11 m while execution peaks at 0.84 m. The large requested jump is not reproduced.",
+        "preview_start_s": 4
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 737629,
+          "sha256": "e88fba816c0a23e79dcb4b1bc0a72eeb15855826497f423ff9f108e2f3d6505f"
+        },
+        ".gif": {
+          "bytes": 922208,
+          "sha256": "8755cfd4d70b14310cd464a905616712f9f6ec59c324207b95a17d8223d36869"
+        },
+        ".npz": {
+          "bytes": 376066,
+          "sha256": "476ae697e5c400618af0a7712012b272d4b508347d2dc3fa884824aff1925800"
+        },
+        ".json": {
+          "bytes": 449025,
+          "sha256": "a2a4277d8d9d4726dc632a89c59b890d3c01006252c55755dce7165183fae7ab"
+        }
+      }
     },
     {
       "name": "walk",
-      "case": {
-        "category": "walk",
+      "prompt": "walk forward, lean down to pick up an object, then continue the walk",
+      "seed": 3456,
+      "duration": 20.0,
+      "original_source": {
         "clip_id": "injured_torso_grab_walk_ff_180_002__A549",
-        "caption": "walk forward, lean down to pick up an object, then continue the walk",
-        "seed": 3456,
-        "offset": 23540057,
-        "frames": 1454
+        "offset": 23540057
       },
       "metrics": {
-        "label": "best",
-        "case": 2,
-        "category": "walk",
-        "seed": 3456,
-        "seconds": 20.0,
         "first_failure_s": null,
-        "pelvis_min_m": 0.7405349612236023,
-        "joint_mae_rad": 0.0610211156308651,
-        "root_error_m": 0.17238494753837585,
-        "reference_joint_accel_mean": 16.58118438720703,
-        "seam_joint_accel_mean": 14.519742012023926,
-        "reference_root_height_min": 0.7425005435943604,
-        "reference_root_height_max": 0.7886907458305359,
-        "final_root_displacement_m": 7.700913429260254
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7527921795845032,
+        "joint_rmse_rad": 0.06671055406332016,
+        "root_position_rmse_m": 0.06945116817951202,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 6.9659770000000005,
+          "p95": 7.025315249999999,
+          "max": 8.550486
+        }
       },
-      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
-      "source_sha256": "f45c8143635c1e3c61564f33412388a3246523e00fc6546c1581590a059f5b0b",
-      "preview_start_s": 0,
-      "preview_duration_s": 8,
-      "full_duration_s": 20,
-      "playback_speed": 1
+      "files": {
+        ".mp4": {
+          "bytes": 809911,
+          "sha256": "1375bd985449a0db1e0cf09e45c8a021ed4333d34006658f6b89bca12ddb88a0"
+        },
+        ".gif": {
+          "bytes": 559643,
+          "sha256": "f45c7798f54bf0ef88fc5dac41f807f337796b342fdda13d687886369ec9c9cb"
+        },
+        ".npz": {
+          "bytes": 376452,
+          "sha256": "170bcee855ebf7a6268e1445ce22180effa2d29c9e0f8d0b58834b51660955b5"
+        },
+        ".json": {
+          "bytes": 449149,
+          "sha256": "7b5c030008ad0aaadd78e0bc25433e6076e60108c15ff0d4d89062e1406d20c5"
+        }
+      },
+      "run_index": 1,
+      "guard_log": "guards/queue-007-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Forward walking is visible and tracked; the requested bend/pickup phase is not apparent."
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 809911,
+          "sha256": "1375bd985449a0db1e0cf09e45c8a021ed4333d34006658f6b89bca12ddb88a0"
+        },
+        ".gif": {
+          "bytes": 568652,
+          "sha256": "75e3dc05b34f9cac481972d561edc0a019a5e61ce3dc89cb1bea728b6a628e77"
+        },
+        ".npz": {
+          "bytes": 376452,
+          "sha256": "170bcee855ebf7a6268e1445ce22180effa2d29c9e0f8d0b58834b51660955b5"
+        },
+        ".json": {
+          "bytes": 449149,
+          "sha256": "7b5c030008ad0aaadd78e0bc25433e6076e60108c15ff0d4d89062e1406d20c5"
+        }
+      }
     },
     {
       "name": "run",
-      "case": {
-        "category": "run",
+      "prompt": "character waves back over left shoulder and talks with a child then starts to run backwards",
+      "seed": 1234,
+      "duration": 20.0,
+      "original_source": {
         "clip_id": "wave_right_hand_000_R_talking_with_child_jog_ff_start_360_R_001__A479",
-        "caption": "character waves back over left shoulder and talks with a child then starts to run backwards",
-        "seed": 1234,
-        "offset": 26895160,
-        "frames": 531
+        "offset": 26895160
       },
       "metrics": {
-        "label": "best",
-        "case": 3,
-        "category": "run",
-        "seed": 1234,
-        "seconds": 20.0,
         "first_failure_s": null,
-        "pelvis_min_m": 0.6871261596679688,
-        "joint_mae_rad": 0.06391679495573044,
-        "root_error_m": 0.5695499777793884,
-        "reference_joint_accel_mean": 20.327106475830078,
-        "seam_joint_accel_mean": 19.018465042114258,
-        "reference_root_height_min": 0.6773546934127808,
-        "reference_root_height_max": 0.7810474634170532,
-        "final_root_displacement_m": 4.790163993835449
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.6885228753089905,
+        "joint_rmse_rad": 0.08343014866113663,
+        "root_position_rmse_m": 1.3052397966384888,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 7.0429555,
+          "p95": 7.13317805,
+          "max": 8.845745
+        }
       },
-      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
-      "source_sha256": "f5341a4dc1e4ff88e678e98757d65c215286d10b2485420aa0f7ce90776a0f3c",
-      "preview_start_s": 0,
-      "preview_duration_s": 8,
-      "full_duration_s": 20,
-      "playback_speed": 1
+      "files": {
+        ".mp4": {
+          "bytes": 1379565,
+          "sha256": "dfc0873ef46a7c5063481ef36a14b18826d2c4d9e2aedd124cd27d00d75b7fff"
+        },
+        ".gif": {
+          "bytes": 1861313,
+          "sha256": "6fc10c180e9be57eff49e5cd52aa7d0b59698844758204038276ac00ecb6fbf1"
+        },
+        ".npz": {
+          "bytes": 378041,
+          "sha256": "c3f95c17a16c81605ce51cd3790cb5ee43a41a87724d1c480ad43d91ea4893a8"
+        },
+        ".json": {
+          "bytes": 448924,
+          "sha256": "795c3af893b005aff3d0c793f92a23db5202084a0bd2b0e635db7346350f0c89"
+        }
+      },
+      "run_index": 1,
+      "guard_log": "guards/queue-007-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Backward-motion prompt produces locomotion, but large world-position drift develops; execution moves partly out of the matched camera. Root-position RMSE is 1.31 m.",
+        "preview_start_s": 12
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 1379565,
+          "sha256": "dfc0873ef46a7c5063481ef36a14b18826d2c4d9e2aedd124cd27d00d75b7fff"
+        },
+        ".gif": {
+          "bytes": 1494288,
+          "sha256": "5a61638e2d2487ec7b6b7a4f41443914d9ca43f61c58d78582e33bd3fb600c6a"
+        },
+        ".npz": {
+          "bytes": 378041,
+          "sha256": "c3f95c17a16c81605ce51cd3790cb5ee43a41a87724d1c480ad43d91ea4893a8"
+        },
+        ".json": {
+          "bytes": 448924,
+          "sha256": "795c3af893b005aff3d0c793f92a23db5202084a0bd2b0e635db7346350f0c89"
+        }
+      }
     },
     {
       "name": "kick",
-      "case": {
-        "category": "kick",
+      "prompt": "individual with an injured torso kicks an item on the ground and then takes three steps",
+      "seed": 3456,
+      "duration": 20.0,
+      "original_source": {
         "clip_id": "injured_torso_kick_trash_R_002__A217",
-        "caption": "individual with an injured torso kicks an item on the ground and then takes three steps",
-        "seed": 3456,
-        "offset": 3818759,
-        "frames": 469
+        "offset": 3818759
       },
       "metrics": {
-        "label": "best",
-        "case": 11,
-        "category": "kick",
-        "seed": 3456,
-        "seconds": 20.0,
         "first_failure_s": null,
-        "pelvis_min_m": 0.7447440028190613,
-        "joint_mae_rad": 0.06320392340421677,
-        "root_error_m": 0.27483102679252625,
-        "reference_joint_accel_mean": 15.172666549682617,
-        "seam_joint_accel_mean": 13.369955062866211,
-        "reference_root_height_min": 0.7393536567687988,
-        "reference_root_height_max": 0.7850789427757263,
-        "final_root_displacement_m": 4.194714546203613
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7265574932098389,
+        "joint_rmse_rad": 0.0722438171505928,
+        "root_position_rmse_m": 0.2963670790195465,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 6.9953425,
+          "p95": 7.1387287,
+          "max": 8.796565
+        }
       },
-      "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
-      "source_sha256": "b5cccf79a7f7c872adf071715dbdbac71e2d455ed7438f90470c1c5cc2f33331",
-      "preview_start_s": 0,
-      "preview_duration_s": 8,
-      "full_duration_s": 20,
-      "playback_speed": 1
+      "files": {
+        ".mp4": {
+          "bytes": 989893,
+          "sha256": "4cc2f17d8e9ffd32df33773f348dfed6c00d2af7e7e2cfa5a838e3d7bf050f2b"
+        },
+        ".gif": {
+          "bytes": 1834510,
+          "sha256": "b8ece4b0d3517481217c02778ba5930d760579ab3c404ab3e7cbbcc5b28d79c4"
+        },
+        ".npz": {
+          "bytes": 377468,
+          "sha256": "174a337195b621dfda18b7bfc476f9ee6b8e084ed6b5eba36f82597b5cb062e6"
+        },
+        ".json": {
+          "bytes": 448992,
+          "sha256": "88c16179189751313f8127a08f2dbddd43241cace73cac821efb866a960f6d05"
+        }
+      },
+      "run_index": 1,
+      "guard_log": "guards/queue-007-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Low leg extensions/kicks and stepping are visible; no strong injured-torso style or exact three-step sequence is established.",
+        "preview_start_s": 8
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 989893,
+          "sha256": "4cc2f17d8e9ffd32df33773f348dfed6c00d2af7e7e2cfa5a838e3d7bf050f2b"
+        },
+        ".gif": {
+          "bytes": 661438,
+          "sha256": "40ffb2ff15c9ec9eb98604bbcbb76a844f7e4ac1e00a27f1f3325dedcb85fbd0"
+        },
+        ".npz": {
+          "bytes": 377468,
+          "sha256": "174a337195b621dfda18b7bfc476f9ee6b8e084ed6b5eba36f82597b5cb062e6"
+        },
+        ".json": {
+          "bytes": 448992,
+          "sha256": "88c16179189751313f8127a08f2dbddd43241cace73cac821efb866a960f6d05"
+        }
+      }
+    },
+    {
+      "name": "energetic_dance",
+      "prompt": "person performs four reps of a complex dance choreography in one place",
+      "seed": 2345,
+      "duration": 20.0,
+      "original_source": {
+        "clip_id": "dancing_routine_opt_2_002__A416",
+        "offset": 791377
+      },
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7597900629043579,
+        "joint_rmse_rad": 0.08920266479253769,
+        "root_position_rmse_m": 0.07650281488895416,
+        "control_overruns": 2,
+        "deadline_misses": 3,
+        "generation_ms": {
+          "p50": 6.988262000000001,
+          "p95": 7.0307337,
+          "max": 8.562642
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 941565,
+          "sha256": "580dc623cf799d1d421ce955ed432307dd9e3ce271f7e4c6d39157483c973d7b"
+        },
+        ".gif": {
+          "bytes": 1280559,
+          "sha256": "4a21fef85777b44f27136e3f43d96fb177984d332471ae50cf7809fbfd6b33ac"
+        },
+        ".npz": {
+          "bytes": 378595,
+          "sha256": "d8b69c8e50bdde6d253fcd7555616722e0f147e1a717968f8a72974156bf9e2b"
+        },
+        ".json": {
+          "bytes": 448939,
+          "sha256": "4628e34156053a4b1e5c666e65584dcf6f6707b6b762eb30a0ef6897647a53a1"
+        }
+      },
+      "run_index": 1,
+      "guard_log": "guards/queue-007-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Small stepping and arm gestures, with a late arm spread. The complex four-repetition choreography is not established; the historical energetic name is retained.",
+        "preview_start_s": 12
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 941565,
+          "sha256": "580dc623cf799d1d421ce955ed432307dd9e3ce271f7e4c6d39157483c973d7b"
+        },
+        ".gif": {
+          "bytes": 899121,
+          "sha256": "619b605d571b8ba7ade2690f10a5c679c6f616dadb0bea02219d8f41ea9aacf2"
+        },
+        ".npz": {
+          "bytes": 378595,
+          "sha256": "d8b69c8e50bdde6d253fcd7555616722e0f147e1a717968f8a72974156bf9e2b"
+        },
+        ".json": {
+          "bytes": 448939,
+          "sha256": "4628e34156053a4b1e5c666e65584dcf6f6707b6b762eb30a0ef6897647a53a1"
+        }
+      }
+    },
+    {
+      "name": "crouch_rebound",
+      "prompt": "high jump over a moving pole in one place",
+      "seed": 1234,
+      "duration": 20.0,
+      "original_source": {
+        "clip_id": "high_jump_R_opt_1_002__A416",
+        "offset": 776097
+      },
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.5856103301048279,
+        "joint_rmse_rad": 0.11765156686306,
+        "root_position_rmse_m": 0.2886214256286621,
+        "control_overruns": 2,
+        "deadline_misses": 5,
+        "generation_ms": {
+          "p50": 6.991206,
+          "p95": 7.0314041,
+          "max": 8.565686
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 974526,
+          "sha256": "79930374eb7abff62eebd1c64b8eda98a2616d4ad8645b6c808680c42d861741"
+        },
+        ".gif": {
+          "bytes": 1102942,
+          "sha256": "4fc72d52f81cf8c7b78ac3af4bbd0482996cc1bd47a488043353945fbb30886f"
+        },
+        ".npz": {
+          "bytes": 377407,
+          "sha256": "857355ebf6d8de25e62c0cd611eee394a371bd515df52e0559e2b07cd4cf50cd"
+        },
+        ".json": {
+          "bytes": 448791,
+          "sha256": "2d714b6d6bd83af196985ed5f958e1b6aab07a6a4218ce7d60b7f80f91444d79"
+        }
+      },
+      "run_index": 1,
+      "guard_log": "guards/queue-007-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18,
+          2.96,
+          19.64
+        ],
+        "note": "A crouch and rebound are visible. The high-jump reference reaches 1.06 m pelvis height; execution reaches only 0.83 m and shows substantial height/orientation mismatch.",
+        "preview_start_s": 0
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 974526,
+          "sha256": "79930374eb7abff62eebd1c64b8eda98a2616d4ad8645b6c808680c42d861741"
+        },
+        ".gif": {
+          "bytes": 1109901,
+          "sha256": "203ba1bd8f18d08bf204568bc1c57cdad0fd1ebdeea6d599bf11c5236798c047"
+        },
+        ".npz": {
+          "bytes": 377407,
+          "sha256": "857355ebf6d8de25e62c0cd611eee394a371bd515df52e0559e2b07cd4cf50cd"
+        },
+        ".json": {
+          "bytes": 448791,
+          "sha256": "2d714b6d6bd83af196985ed5f958e1b6aab07a6a4218ce7d60b7f80f91444d79"
+        }
+      }
+    },
+    {
+      "name": "walking_forward",
+      "prompt": "A person walks forward.",
+      "seed": 1234,
+      "duration": 20.0,
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7247344851493835,
+        "joint_rmse_rad": 0.07625158131122589,
+        "root_position_rmse_m": 0.3498232066631317,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 6.9690135,
+          "p95": 6.998904700000001,
+          "max": 7.939084
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 1160649,
+          "sha256": "2db3da4ec8de0b0d18ce8ecb2e0627fd0e58ac14bb31864dbc4a18c5e78dc8af"
+        },
+        ".gif": {
+          "bytes": 2008052,
+          "sha256": "9d66a5894c77a9f36003fa85cc91181e3016df4954e983222ccf2937734b1de1"
+        },
+        ".npz": {
+          "bytes": 378873,
+          "sha256": "fe21a6fb39c81c72eb6cc24371d695b4258eaf46648cf9b4b2bf00cd51f9ce0d"
+        },
+        ".json": {
+          "bytes": 448715,
+          "sha256": "63e8de94d10b135d5bf7ec7e22039d238ded5d49a8ea40cc906a0378d98778b3"
+        }
+      },
+      "run_index": 1,
+      "guard_log": "guards/queue-007-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Sustained forward walking is visible; execution remains upright but world-position drift accumulates (0.35 m root RMSE).",
+        "preview_start_s": 8
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 1160649,
+          "sha256": "2db3da4ec8de0b0d18ce8ecb2e0627fd0e58ac14bb31864dbc4a18c5e78dc8af"
+        },
+        ".gif": {
+          "bytes": 1460751,
+          "sha256": "bd9e089f6a11c4b7d9d81088d0f59a33fd8030e6527c7df17898b33f99583537"
+        },
+        ".npz": {
+          "bytes": 378873,
+          "sha256": "fe21a6fb39c81c72eb6cc24371d695b4258eaf46648cf9b4b2bf00cd51f9ce0d"
+        },
+        ".json": {
+          "bytes": 448715,
+          "sha256": "63e8de94d10b135d5bf7ec7e22039d238ded5d49a8ea40cc906a0378d98778b3"
+        }
+      }
+    },
+    {
+      "name": "side_step",
+      "prompt": "A person takes steps sideways to the left.",
+      "seed": 1234,
+      "duration": 20.0,
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7246886491775513,
+        "joint_rmse_rad": 0.10808341205120087,
+        "root_position_rmse_m": 1.2582095861434937,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 7.0234085,
+          "p95": 7.1150525,
+          "max": 9.083367
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 1231730,
+          "sha256": "0c9f7d9d6d6828611f02730d94662f2fdc6be37ccf37a0cf94314d5f0e849a9a"
+        },
+        ".gif": {
+          "bytes": 2049683,
+          "sha256": "182bd1cec1dde5e8e786f03333ad8009fa35c57235441797e56e09e4bb25ecef"
+        },
+        ".npz": {
+          "bytes": 378610,
+          "sha256": "ecfd8c3075157e3717743be58bf4526721ff3735ba8b610066ffc9143e8b1137"
+        },
+        ".json": {
+          "bytes": 448751,
+          "sha256": "c0db08d63ebfaeb91d8614353085ee4934f6eed5157d009d3e6616f7716cd027"
+        }
+      },
+      "run_index": 2,
+      "guard_log": "guards/queue-012-gpu2.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Side-stepping motion is visible, but execution develops large positional drift (1.26 m root RMSE) and partly leaves the matched camera.",
+        "preview_start_s": 12
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 1231730,
+          "sha256": "0c9f7d9d6d6828611f02730d94662f2fdc6be37ccf37a0cf94314d5f0e849a9a"
+        },
+        ".gif": {
+          "bytes": 1471042,
+          "sha256": "6eb879b4006586e31cf7f4386e7c45766a6ce32261e670f9f7dbaa350b8f5674"
+        },
+        ".npz": {
+          "bytes": 378610,
+          "sha256": "ecfd8c3075157e3717743be58bf4526721ff3735ba8b610066ffc9143e8b1137"
+        },
+        ".json": {
+          "bytes": 448751,
+          "sha256": "c0db08d63ebfaeb91d8614353085ee4934f6eed5157d009d3e6616f7716cd027"
+        }
+      }
+    },
+    {
+      "name": "wave_arms",
+      "prompt": "A person waves both arms overhead.",
+      "seed": 1234,
+      "duration": 20.0,
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7597900629043579,
+        "joint_rmse_rad": 0.07554876804351807,
+        "root_position_rmse_m": 0.045108284801244736,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 7.002269999999999,
+          "p95": 7.0432841999999996,
+          "max": 8.969546
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 685726,
+          "sha256": "87e0b7ff23130d3f004b2fc9639af3f68ea0a7e56f314a134ba3322536dc7091"
+        },
+        ".gif": {
+          "bytes": 699104,
+          "sha256": "6927573c14c79f3d75d928c67684f330ec56307e7eaf0d0745bbe0fd0c2da1a5"
+        },
+        ".npz": {
+          "bytes": 378728,
+          "sha256": "d950d100656e9ef1d61d189b27ecdc9f931f3e324222d15b3673f057fd6eac44"
+        },
+        ".json": {
+          "bytes": 448851,
+          "sha256": "a50158dd8a4e651f448d4ece5defb823fc921a079bcf421761c1d4d52f47ce1b"
+        }
+      },
+      "run_index": 3,
+      "guard_log": "guards/queue-014-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "note": "Both arms rise, followed by asymmetric waving. Reference and execution agree closely; continuous symmetric overhead waving is not maintained.",
+        "preview_start_s": 4
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 685726,
+          "sha256": "87e0b7ff23130d3f004b2fc9639af3f68ea0a7e56f314a134ba3322536dc7091"
+        },
+        ".gif": {
+          "bytes": 746604,
+          "sha256": "996b93be6bbf1233de0ec17e42de14ece3f0c6d69f8a9e9de849e15f494f78f8"
+        },
+        ".npz": {
+          "bytes": 378728,
+          "sha256": "d950d100656e9ef1d61d189b27ecdc9f931f3e324222d15b3673f057fd6eac44"
+        },
+        ".json": {
+          "bytes": 448851,
+          "sha256": "a50158dd8a4e651f448d4ece5defb823fc921a079bcf421761c1d4d52f47ce1b"
+        }
+      }
+    },
+    {
+      "name": "squat",
+      "prompt": "A person performs a squat and stands back up.",
+      "seed": 1234,
+      "duration": 20.0,
+      "metrics": {
+        "first_failure_s": 7.9,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.3069983422756195,
+        "joint_rmse_rad": 0.09642641246318817,
+        "root_position_rmse_m": 0.05443069338798523,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 7.015828,
+          "p95": 7.42329155,
+          "max": 8.818608
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 870245,
+          "sha256": "6e6ee64439b73ed57ebb6ca746d20bdc73d3285accb36100979c37296718c4be"
+        },
+        ".gif": {
+          "bytes": 1090107,
+          "sha256": "0da9fb3467512595347ec4144799cd6971c93596652a465f82f8a7bdbb1dd44c"
+        },
+        ".npz": {
+          "bytes": 379180,
+          "sha256": "8542d07c72320df857512f3bdc31fcd8f241e90eedb520a4ca65360df664c28d"
+        },
+        ".json": {
+          "bytes": 448813,
+          "sha256": "9abe420845221a6be91d5fdbcce48e8388e915ea97f27da44d0100c1575c9142"
+        }
+      },
+      "run_index": 3,
+      "guard_log": "guards/queue-014-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          7.7,
+          8.3,
+          18,
+          12.98,
+          14,
+          19.96
+        ],
+        "note": "Deep squat crosses the 0.35 m height screen at 7.90 s (minimum 0.31 m). No visible topple: pelvis tilt stays below 47 degrees. The robot does not fully stand back up by 20 s.",
+        "preview_start_s": 6
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 870245,
+          "sha256": "6e6ee64439b73ed57ebb6ca746d20bdc73d3285accb36100979c37296718c4be"
+        },
+        ".gif": {
+          "bytes": 1013152,
+          "sha256": "35b1a8af105185aed3c141916e686a0f69ed8175d3f71a79b6847c4010bc6419"
+        },
+        ".npz": {
+          "bytes": 379180,
+          "sha256": "8542d07c72320df857512f3bdc31fcd8f241e90eedb520a4ca65360df664c28d"
+        },
+        ".json": {
+          "bytes": 448813,
+          "sha256": "9abe420845221a6be91d5fdbcce48e8388e915ea97f27da44d0100c1575c9142"
+        }
+      }
+    },
+    {
+      "name": "jump_in_place",
+      "prompt": "A person jumps in place.",
+      "seed": 1234,
+      "duration": 20.0,
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.6440709829330444,
+        "joint_rmse_rad": 0.08141817897558212,
+        "root_position_rmse_m": 0.11040198802947998,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 6.980622,
+          "p95": 7.09247985,
+          "max": 8.007133
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 736823,
+          "sha256": "c69f39beee04a67b5a40c2f19494579ecd44a642b5d0bbd974b017306bed12d8"
+        },
+        ".gif": {
+          "bytes": 973985,
+          "sha256": "a8166c20405e7b4dcb28dd575e4144f02076d71ddf55f48277bced5918a987a3"
+        },
+        ".npz": {
+          "bytes": 376900,
+          "sha256": "2920b913c3d607ac4e860da1c821ba41cc2b8a6bf20cddc6e1e5f7ac767f520c"
+        },
+        ".json": {
+          "bytes": 448848,
+          "sha256": "90541c7867dc2be0376bb2fd8552ea7a5362435591810f460383c21059222f83"
+        }
+      },
+      "run_index": 3,
+      "guard_log": "guards/queue-014-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18,
+          5.68,
+          13.98
+        ],
+        "note": "Jump attempts are visible, but execution reaches only 0.84 m pelvis height versus 1.07 m in the reference; jump amplitude is not reproduced.",
+        "preview_start_s": 2
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 736823,
+          "sha256": "c69f39beee04a67b5a40c2f19494579ecd44a642b5d0bbd974b017306bed12d8"
+        },
+        ".gif": {
+          "bytes": 964955,
+          "sha256": "fba9bc22206e30b4623685087d6d964958af1a03e5740c652346a9ee4c12dbf5"
+        },
+        ".npz": {
+          "bytes": 376900,
+          "sha256": "2920b913c3d607ac4e860da1c821ba41cc2b8a6bf20cddc6e1e5f7ac767f520c"
+        },
+        ".json": {
+          "bytes": 448848,
+          "sha256": "90541c7867dc2be0376bb2fd8552ea7a5362435591810f460383c21059222f83"
+        }
+      }
+    },
+    {
+      "name": "front_kick",
+      "prompt": "A person kicks one leg forward.",
+      "seed": 1234,
+      "duration": 20.0,
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7058125734329224,
+        "joint_rmse_rad": 0.10679130256175995,
+        "root_position_rmse_m": 0.3777295649051666,
+        "control_overruns": 1,
+        "deadline_misses": 1,
+        "generation_ms": {
+          "p50": 6.997218,
+          "p95": 7.0662713,
+          "max": 16.510783
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 996170,
+          "sha256": "8b192fb47b83449af832f72b92a9dc02b243f150dfa0a305643104b1f4a913b6"
+        },
+        ".gif": {
+          "bytes": 1249458,
+          "sha256": "c52e86c988b4139a818b507e2c5fcf0e816979ec868bb7137336ffd8ad409d3e"
+        },
+        ".npz": {
+          "bytes": 377615,
+          "sha256": "7ad62ff6470fa34d5a6ffb2e4ddae17caa3ad75ed45c67a7d22308b80897fbd3"
+        },
+        ".json": {
+          "bytes": 448765,
+          "sha256": "130a5d980045d6cb2c41e322bcccf25e1acba2df0eb28598173dbaa174ff90c1"
+        }
+      },
+      "run_index": 3,
+      "guard_log": "guards/queue-014-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18,
+          4,
+          10,
+          16,
+          19.5
+        ],
+        "preview_start_s": 12,
+        "note": "Low forward leg lifts/extensions appear late, with stepping and positional drift (0.38 m root RMSE); no strong front kick is established."
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 996170,
+          "sha256": "8b192fb47b83449af832f72b92a9dc02b243f150dfa0a305643104b1f4a913b6"
+        },
+        ".gif": {
+          "bytes": 1061814,
+          "sha256": "dcaf03aad6d1b0d991f3ef0525b71c7681ed5713be08b36e17741fafb213b612"
+        },
+        ".npz": {
+          "bytes": 377615,
+          "sha256": "7ad62ff6470fa34d5a6ffb2e4ddae17caa3ad75ed45c67a7d22308b80897fbd3"
+        },
+        ".json": {
+          "bytes": 448765,
+          "sha256": "130a5d980045d6cb2c41e322bcccf25e1acba2df0eb28598173dbaa174ff90c1"
+        }
+      }
+    },
+    {
+      "name": "punch",
+      "prompt": "A person throws a punch forward.",
+      "seed": 1234,
+      "duration": 20.0,
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7597900629043579,
+        "joint_rmse_rad": 0.0936344787478447,
+        "root_position_rmse_m": 0.037320420145988464,
+        "control_overruns": 0,
+        "deadline_misses": 0,
+        "generation_ms": {
+          "p50": 6.9876055,
+          "p95": 7.0186947,
+          "max": 8.889015
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 770684,
+          "sha256": "f4da33e1284f207f95967f0ea7153edf4526c0f769167b03b40fe9d1271b222d"
+        },
+        ".gif": {
+          "bytes": 931923,
+          "sha256": "5dc1785800d03be4b502f503c525cb2c23ad588496d2bd345ee55cf661177566"
+        },
+        ".npz": {
+          "bytes": 377712,
+          "sha256": "5ec9ab091b72b8dc24be3bae058c8525dcd7d0045c9ac885081c293930a267f1"
+        },
+        ".json": {
+          "bytes": 448879,
+          "sha256": "3195b9cb6077f7e2f4f758e63e99e4da1104eee64e01aae3d3dd97fb4aa36823"
+        }
+      },
+      "run_index": 3,
+      "guard_log": "guards/queue-014-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18,
+          4,
+          10,
+          16,
+          19.5
+        ],
+        "preview_start_s": 0,
+        "note": "Raised-arm gestures are tracked closely, but a clear forward punch is not apparent."
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 770684,
+          "sha256": "f4da33e1284f207f95967f0ea7153edf4526c0f769167b03b40fe9d1271b222d"
+        },
+        ".gif": {
+          "bytes": 930046,
+          "sha256": "d1aa09aa5002a5fbe464ba37d2d85f19b8d526d8ad32a5dc15e57fa7efc7311f"
+        },
+        ".npz": {
+          "bytes": 377712,
+          "sha256": "5ec9ab091b72b8dc24be3bae058c8525dcd7d0045c9ac885081c293930a267f1"
+        },
+        ".json": {
+          "bytes": 448879,
+          "sha256": "3195b9cb6077f7e2f4f758e63e99e4da1104eee64e01aae3d3dd97fb4aa36823"
+        }
+      }
+    },
+    {
+      "name": "spin",
+      "prompt": "A person spins around in place.",
+      "seed": 1234,
+      "duration": 20.0,
+      "metrics": {
+        "first_failure_s": null,
+        "failure_screen": "first pelvis z < 0.35 m or root tilt > 60 degrees; no early termination",
+        "root_height_min_m": 0.7268025875091553,
+        "joint_rmse_rad": 0.09249378740787506,
+        "root_position_rmse_m": 0.26270970702171326,
+        "control_overruns": 1,
+        "deadline_misses": 1,
+        "generation_ms": {
+          "p50": 6.9964885,
+          "p95": 7.20639865,
+          "max": 16.077226
+        }
+      },
+      "files": {
+        ".mp4": {
+          "bytes": 884654,
+          "sha256": "bd0223e9d4e0fd297e533345985ce362103897b1db77e84660cd623fc47d0335"
+        },
+        ".gif": {
+          "bytes": 888242,
+          "sha256": "cd03e0807ca42b19184fd755e2924e472b7eb66976c3f1d739f74783e34bae6a"
+        },
+        ".npz": {
+          "bytes": 375971,
+          "sha256": "cd7f3d7c32ab97931eaa2d2ae36d654f542e715d8fa8654dd0dee9633abebde0"
+        },
+        ".json": {
+          "bytes": 448442,
+          "sha256": "778367022e0b4cd152f14564385a3c35d4ca529b296836fc9fe0c5068f199fe0"
+        }
+      },
+      "run_index": 3,
+      "guard_log": "guards/queue-014-gpu1.jsonl",
+      "review": {
+        "times_s": [
+          1,
+          6,
+          12,
+          18
+        ],
+        "preview_start_s": 4,
+        "note": "Repeated rotation is visible and remains upright; unwrapped pelvis yaw changes by about 936 degrees in the reference and 899 degrees in execution."
+      },
+      "recording_files": {
+        ".mp4": {
+          "bytes": 884654,
+          "sha256": "bd0223e9d4e0fd297e533345985ce362103897b1db77e84660cd623fc47d0335"
+        },
+        ".gif": {
+          "bytes": 948310,
+          "sha256": "685586ea8edfc7b4bdb58ba808fb5bd925b727d1020d73c86bd52445b70fb0f1"
+        },
+        ".npz": {
+          "bytes": 375971,
+          "sha256": "cd7f3d7c32ab97931eaa2d2ae36d654f542e715d8fa8654dd0dee9633abebde0"
+        },
+        ".json": {
+          "bytes": 448442,
+          "sha256": "778367022e0b4cd152f14564385a3c35d4ca529b296836fc9fe0c5068f199fe0"
+        }
+      }
     }
-  ]
+  ],
+  "recorded_date": "2026-11-09",
+  "audit": {
+    "passed": true,
+    "control_ticks": 16000,
+    "replans": 1600,
+    "checks": [
+      "source and checkpoint hashes",
+      "all fixed prompts and seeds",
+      "finite raw trajectories",
+      "20 ms timestamps and 10-tick replans",
+      "recomputed height/tilt screens",
+      "video duration, dimensions, frame count and size",
+      "no foreign GPU process in accepted case guard samples"
+    ]
+  },
+  "metrics": [
+    {
+      "name": "dance",
+      "first_failure_s": null,
+      "root_rmse_m": 0.05567668750882149,
+      "joint_rmse_rad": 0.09302866458892822,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8115271329879761,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 7.0205081499999995,
+      "replan_compute_p95_ms": 12.68522375
+    },
+    {
+      "name": "turn",
+      "first_failure_s": null,
+      "root_rmse_m": 0.03877696767449379,
+      "joint_rmse_rad": 0.0737965926527977,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8127591013908386,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 7.10777485,
+      "replan_compute_p95_ms": 12.7756819
+    },
+    {
+      "name": "jump",
+      "first_failure_s": null,
+      "root_rmse_m": 0.17998501658439636,
+      "joint_rmse_rad": 0.09148488193750381,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 1.1132750511169434,
+      "execution_peak_height_m": 0.8382219076156616,
+      "generation_p95_ms": 7.10027935,
+      "replan_compute_p95_ms": 12.722966399999999
+    },
+    {
+      "name": "walk",
+      "first_failure_s": null,
+      "root_rmse_m": 0.06945116817951202,
+      "joint_rmse_rad": 0.06671055406332016,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8103601336479187,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 7.025315249999999,
+      "replan_compute_p95_ms": 12.1661007
+    },
+    {
+      "name": "run",
+      "first_failure_s": null,
+      "root_rmse_m": 1.3052397966384888,
+      "joint_rmse_rad": 0.08343014866113663,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8352178335189819,
+      "execution_peak_height_m": 0.8012219071388245,
+      "generation_p95_ms": 7.13317805,
+      "replan_compute_p95_ms": 12.44595535
+    },
+    {
+      "name": "kick",
+      "first_failure_s": null,
+      "root_rmse_m": 0.2963670790195465,
+      "joint_rmse_rad": 0.0722438171505928,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8735607862472534,
+      "execution_peak_height_m": 0.7901678085327148,
+      "generation_p95_ms": 7.1387287,
+      "replan_compute_p95_ms": 12.175369499999999
+    },
+    {
+      "name": "energetic_dance",
+      "first_failure_s": null,
+      "root_rmse_m": 0.07650281488895416,
+      "joint_rmse_rad": 0.08920266479253769,
+      "control_overruns": 2,
+      "deadline_misses": 3,
+      "reference_peak_height_m": 0.8130790591239929,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 7.0307337,
+      "replan_compute_p95_ms": 12.7115706
+    },
+    {
+      "name": "crouch_rebound",
+      "first_failure_s": null,
+      "root_rmse_m": 0.2886214256286621,
+      "joint_rmse_rad": 0.11765156686306,
+      "control_overruns": 2,
+      "deadline_misses": 5,
+      "reference_peak_height_m": 1.0584325790405273,
+      "execution_peak_height_m": 0.8306639194488525,
+      "generation_p95_ms": 7.0314041,
+      "replan_compute_p95_ms": 12.52177405
+    },
+    {
+      "name": "walking_forward",
+      "first_failure_s": null,
+      "root_rmse_m": 0.3498232066631317,
+      "joint_rmse_rad": 0.07625158131122589,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8160474300384521,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 6.998904700000001,
+      "replan_compute_p95_ms": 12.666730300000001
+    },
+    {
+      "name": "side_step",
+      "first_failure_s": null,
+      "root_rmse_m": 1.2582095861434937,
+      "joint_rmse_rad": 0.10808341205120087,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8280341029167175,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 7.1150525,
+      "replan_compute_p95_ms": 12.3199756
+    },
+    {
+      "name": "wave_arms",
+      "first_failure_s": null,
+      "root_rmse_m": 0.045108284801244736,
+      "joint_rmse_rad": 0.07554876804351807,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.822098970413208,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 7.0432841999999996,
+      "replan_compute_p95_ms": 12.8846523
+    },
+    {
+      "name": "squat",
+      "first_failure_s": 7.9,
+      "root_rmse_m": 0.05443069338798523,
+      "joint_rmse_rad": 0.09642641246318817,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8656384348869324,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 7.42329155,
+      "replan_compute_p95_ms": 12.9516329
+    },
+    {
+      "name": "jump_in_place",
+      "first_failure_s": null,
+      "root_rmse_m": 0.11040198802947998,
+      "joint_rmse_rad": 0.08141817897558212,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 1.0723611116409302,
+      "execution_peak_height_m": 0.8398330807685852,
+      "generation_p95_ms": 7.09247985,
+      "replan_compute_p95_ms": 12.67717405
+    },
+    {
+      "name": "front_kick",
+      "first_failure_s": null,
+      "root_rmse_m": 0.3777295649051666,
+      "joint_rmse_rad": 0.10679130256175995,
+      "control_overruns": 1,
+      "deadline_misses": 1,
+      "reference_peak_height_m": 0.8370946049690247,
+      "execution_peak_height_m": 0.8085139989852905,
+      "generation_p95_ms": 7.0662713,
+      "replan_compute_p95_ms": 12.37344605
+    },
+    {
+      "name": "punch",
+      "first_failure_s": null,
+      "root_rmse_m": 0.037320420145988464,
+      "joint_rmse_rad": 0.0936344787478447,
+      "control_overruns": 0,
+      "deadline_misses": 0,
+      "reference_peak_height_m": 0.8159899115562439,
+      "execution_peak_height_m": 0.7900000214576721,
+      "generation_p95_ms": 7.0186947,
+      "replan_compute_p95_ms": 12.7364344
+    },
+    {
+      "name": "spin",
+      "first_failure_s": null,
+      "root_rmse_m": 0.26270970702171326,
+      "joint_rmse_rad": 0.09249378740787506,
+      "control_overruns": 1,
+      "deadline_misses": 1,
+      "reference_peak_height_m": 0.8101673722267151,
+      "execution_peak_height_m": 0.7903858423233032,
+      "generation_p95_ms": 7.20639865,
+      "replan_compute_p95_ms": 12.204310249999999
+    }
+  ],
+  "presentation": {
+    "ffmpeg": "ffmpeg version 9.0 Copyright (c) 2000-2026 the FFmpeg developers",
+    "script_sha256": "4ca5c7e6d347e1c4c7331f5cc453da32770ea229449cb664b42906e0b1b5853d",
+    "note": "Only GIF excerpt start times changed after recording; MP4, NPZ and JSON are byte-identical to the guarded runs. Preview offsets are in cases.json."
+  },
+  "runtime": {
+    "torch": "2.7.1+cu128",
+    "mujoco": "3.11.0",
+    "onnxruntime-gpu": "1.23.2",
+    "tensorrt": "10.13.3.9",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3"
+  },
+  "gpu_policy": "One idle GPU at a time on hq-g1; 0.5 s process polling including compute and graphics. Foreign-process interruptions were discarded and retried with the same seed, never selected by motion outcome. See guards/queue.log.",
+  "validation": {
+    "gpu_tests": "253 passed, 1 warning in 20.23s",
+    "local_tests": "252 passed, 1 CUDA-only skip, 7 warnings in 15.64s",
+    "backend_report": "backend_check.json",
+    "backend_report_sha256": "40137a920202a673182f2774c3dbf76099b8131c89200fc5821b9bbb30b19fbb",
+    "backend_checks": "40 fixed windows: exact repeated output, graph/eager TRT agreement, Torch adapter/upstream allclose; FP16 versus FP32 differences measured without an acceptance threshold",
+    "gpu_guard": "guards/validation.jsonl",
+    "initial_environment_failures": "Missing pandas/pyarrow, then datasets; installed data dependencies in an isolated test-deps directory and reran the entire suite successfully. Shared training environment unchanged.",
+    "cases_sha256": "3046b37cc2e066391302071f4f4c60391f8c634abfcda2d81a8920d1122e9353"
+  }
 }

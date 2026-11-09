@@ -93,7 +93,7 @@ def main():
             import imageio_ffmpeg
 
             subprocess.run([
-                imageio_ffmpeg.get_ffmpeg_exe(), "-v", "error", "-y", "-i",
+                imageio_ffmpeg.get_ffmpeg_exe(), "-v", "error", "-y", "-ss", str(case.get("preview_start_s", 0)), "-i",
                 str(args.output / (case["name"] + ".mp4")), "-t", "8", "-vf",
                 "fps=8,scale=480:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=64[p];[b][p]paletteuse=dither=bayer:bayer_scale=3",
                 str(args.output / (case["name"] + ".gif")),

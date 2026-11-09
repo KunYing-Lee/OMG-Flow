@@ -45,3 +45,7 @@ __pycache__/
 # Small, requested synchronous deployment evidence.
 !docs/deploy_sync/*.mp4
 !docs/deploy_sync/*.npz
+
+# Reviewed synchronous gallery and its raw paired trajectories.
+!docs/media/flow/*.mp4
+!docs/media/flow/*.npz

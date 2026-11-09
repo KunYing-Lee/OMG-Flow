@@ -63,8 +63,9 @@ validation and splice. `planning_ms` also includes state read and reference
 feature construction. Each tick separately measures generation, reference features, observation
 construction, tracker ONNX (including its transfers), and state read + physics/write.
 `feature_build_ms` is reference features plus observation construction; `other_ms`
-accounts for remaining loop work. Reports include P50/P95/max for all 500 ticks
-and separately for the 50 replan ticks. Generation is zero on other ticks.
+accounts for remaining loop work. Reports include P50/P95/max for all ticks
+and separately for replan ticks (500/50 for the default ten-second run,
+1,000/100 for the twenty-second gallery). Generation is zero on other ticks.
 `overrun=raise` fails on a missed 20 ms budget; `log` records every overrun for
 diagnostic simulation. `pace=true` uses absolute 50 Hz wall deadlines and reports
 lateness. Ticks/timestamps are never dropped or shifted to conceal a miss.
@@ -72,8 +73,9 @@ lateness. Ticks/timestamps are never dropped or shifted to conceal a miss.
 MuJoCo advances ten 2 ms physics steps per control write. During an overrun,
 physics waits for the synchronous computation; a physical robot would continue
 moving. Thus an overrunning run is an offline tracking demonstration, not proof
-of real-time control. Videos play simulation time at 50 fps and are rendered
-after measurement from paired pre-action states at identical timestamps.
+of real-time control. Videos play simulation time at 50 fps, or 25 fps with
+`--showcase`, and are rendered after measurement from paired pre-action states
+at identical timestamps.
 
 ## Suffix filter
 

@@ -7,7 +7,8 @@
     "original_source": {
       "clip_id": "dancing_routine_opt_2_001__A039",
       "offset": 49805043
-    }
+    },
+    "preview_start_s": 0
   },
   {
     "name": "turn",
@@ -17,7 +18,8 @@
     "original_source": {
       "clip_id": "idle_turn_090_R_long_002__A549",
       "offset": 23894478
-    }
+    },
+    "preview_start_s": 0
   },
   {
     "name": "jump",
@@ -27,7 +29,8 @@
     "original_source": {
       "clip_id": "reach_jump_R_002__A217",
       "offset": 4064345
-    }
+    },
+    "preview_start_s": 4
   },
   {
     "name": "walk",
@@ -37,7 +40,8 @@
     "original_source": {
       "clip_id": "injured_torso_grab_walk_ff_180_002__A549",
       "offset": 23540057
-    }
+    },
+    "preview_start_s": 0
   },
   {
     "name": "run",
@@ -47,7 +51,8 @@
     "original_source": {
       "clip_id": "wave_right_hand_000_R_talking_with_child_jog_ff_start_360_R_001__A479",
       "offset": 26895160
-    }
+    },
+    "preview_start_s": 12
   },
   {
     "name": "kick",
@@ -57,7 +62,8 @@
     "original_source": {
       "clip_id": "injured_torso_kick_trash_R_002__A217",
       "offset": 3818759
-    }
+    },
+    "preview_start_s": 8
   },
   {
     "name": "energetic_dance",
@@ -67,7 +73,8 @@
     "original_source": {
       "clip_id": "dancing_routine_opt_2_002__A416",
       "offset": 791377
-    }
+    },
+    "preview_start_s": 12
   },
   {
     "name": "crouch_rebound",
@@ -77,54 +84,63 @@
     "original_source": {
       "clip_id": "high_jump_R_opt_1_002__A416",
       "offset": 776097
-    }
+    },
+    "preview_start_s": 0
   },
   {
     "name": "walking_forward",
     "prompt": "A person walks forward.",
     "seed": 1234,
-    "duration": 20.0
+    "duration": 20.0,
+    "preview_start_s": 8
   },
   {
     "name": "side_step",
     "prompt": "A person takes steps sideways to the left.",
     "seed": 1234,
-    "duration": 20.0
+    "duration": 20.0,
+    "preview_start_s": 12
   },
   {
     "name": "wave_arms",
     "prompt": "A person waves both arms overhead.",
     "seed": 1234,
-    "duration": 20.0
+    "duration": 20.0,
+    "preview_start_s": 4
   },
   {
     "name": "squat",
     "prompt": "A person performs a squat and stands back up.",
     "seed": 1234,
-    "duration": 20.0
+    "duration": 20.0,
+    "preview_start_s": 6
   },
   {
     "name": "jump_in_place",
     "prompt": "A person jumps in place.",
     "seed": 1234,
-    "duration": 20.0
+    "duration": 20.0,
+    "preview_start_s": 2
   },
   {
     "name": "front_kick",
     "prompt": "A person kicks one leg forward.",
     "seed": 1234,
-    "duration": 20.0
+    "duration": 20.0,
+    "preview_start_s": 12
   },
   {
     "name": "punch",
     "prompt": "A person throws a punch forward.",
     "seed": 1234,
-    "duration": 20.0
+    "duration": 20.0,
+    "preview_start_s": 0
   },
   {
     "name": "spin",
     "prompt": "A person spins around in place.",
     "seed": 1234,
-    "duration": 20.0
+    "duration": 20.0,
+    "preview_start_s": 4
   }
 ]
