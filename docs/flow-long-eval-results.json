@@ -184,7 +184,7 @@
     "ode_steps": 10,
     "tracker": {
       "onnx_sha256": "2aabb53bd86b1860dd07b24d02710f4b988f9c201655becb45a2378604599ad7",
-      "onnx_path": "/root/leeky/models/HoloMotion_motion_tracking_model_v1.4.1/exported/model_16200.onnx",
+      "onnx_path": "/models/holomotion/model_16200.onnx",
       "action_clip": 10.0,
       "control_substeps": 10,
       "init": "same observed pose and differentiated velocity",

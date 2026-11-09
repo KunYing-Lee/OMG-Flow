@@ -1,3 +1,5 @@
+<!-- Derived from HoloMotion v1.4.1, Copyright 2025 Horizon Robotics, Apache-2.0.
+     Modified: meshdir points to the repository G1 meshes. See THIRD_PARTY_NOTICES.md. -->
 <mujoco model="g1_29dof">
   <compiler angle="radian" meshdir="../../robots/g1/meshes" />
 

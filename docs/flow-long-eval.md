@@ -42,20 +42,19 @@ These are descriptive paired results over three seeds per clip. They do not show
 
 Use `scripts/validation/flow_long_eval.py` stages `generate`, `track`, and `render` with `PYTHONPATH=src`. Set `MUJOCO_GL=disable` for headless physics. Rendering requires a working OpenGL context. CPU tracking uses one ONNX thread; generation used one idle RTX 5090. The recorded batch-of-18 replan latency was about 102 ms, which is not a single-stream deadline measurement.
 
-Example remote inputs:
+Example local inputs:
 
 ```sh
 PYTHONPATH=src CUDA_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
-  /tmp/leeky-omg-flow/venv/bin/python scripts/validation/flow_long_eval.py generate \
-  --data /tmp/leeky-omg-flow/bones --text /tmp/leeky-omg-flow/bones-text \
-  --run /root/leeky/omg-flow/runs/bones-native50-4x5090-20261107 \
-  --out /tmp/leeky-omg-flow/eval-200k
+  python scripts/validation/flow_long_eval.py generate \
+  --data data/bones --text data/bones-text \
+  --run runs/bones-flow \
+  --out outputs/eval-200k
 ```
 
 Run stage `track` with `--out`, `--onnx`, and `MUJOCO_GL=disable`. Run stage `render` with only `--out` on the saved output directory. Render defaults to seed 1234 for all six categories, chosen in advance rather than by outcome. Videos show best/final reference on the top row and their physics execution below; each execution camera follows the corresponding reference and shows root error.
 
-- Durable G3 artifacts: `/root/leeky/omg-flow/evaluations/eval-200k`.
-- Local artifacts and six full 20-second videos: `/Users/mac/Developer/OMG-Flow/outputs/eval-200k`.
+- Evaluation artifacts and six full 20-second videos: `outputs/eval-200k` (generated locally; not bundled).
 - `manifest.json` records exact clip IDs, captions, seeds, checkpoint/data/T5/tracker hashes, physics dependencies, and XML hashes.
 - `tracking.json` contains all 42 replay records; `summary.json` contains aggregates. Raw reference, execution, and action arrays are preserved.
 - Best checkpoint SHA256: `3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde`.

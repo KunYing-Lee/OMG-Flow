@@ -1,12 +1,12 @@
 {
   "config": {
-    "checkpoint": "/root/leeky/omg-flow/selected/bones-native50-step190500.pt",
+    "checkpoint": "/models/bones-flow/bones-native50-step190500.pt",
     "prompt": "A person takes steps sideways to the left.",
     "steps": 10,
     "prefix_length": 25,
     "replan_period": 0.2,
-    "text_encoder": "/root/leeky/projects/OMG-Posttrain/flow-ab-20261108/assets/t5-base-local",
-    "tracker": "/root/leeky/projects/OMG-Posttrain/deploy-assets/assets/tracker/model_16200_dynamic_batch.onnx",
+    "text_encoder": "/models/t5-base",
+    "tracker": "/models/holomotion/model_16200_dynamic_batch.onnx",
     "scene": "assets/holomotion/g1_29dof/scene_29dof.xml",
     "standing_height": 0.79,
     "duration": 20.0,
