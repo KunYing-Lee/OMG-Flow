@@ -9,12 +9,12 @@ same thread.
 nvidia-smi
 CUDA_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 PYTHONPATH=src \
   python -m deployment.run_sync --config deployment/sync_flow.json \
-  --output docs/deploy_sync/sync_02s
+  --output outputs/deploy-sync/sync_02s
 
 # Identical prompt, seed, prefix, integrator and checkpoint; only cadence changes.
 CUDA_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 PYTHONPATH=src \
   python -m deployment.run_sync --config deployment/sync_flow.json \
-  --period 0.5 --output docs/deploy_sync/sync_05s
+  --period 0.5 --output outputs/deploy-sync/sync_05s
 
 python -m pytest -q tests/generation/test_sync_deployment.py
 ```
@@ -119,14 +119,14 @@ CUDA_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 PYTHONPATH=src \
   python -m deployment.export_sync --config deployment/sync_flow.json
 CUDA_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 PYTHONPATH=src \
   python -m deployment.check_sync_backend --config deployment/sync_flow.json \
-  --reference docs/deploy_sync/sync_02s.npz \
-  --output docs/deploy_sync/backend_trt_check.json
+  --reference docs/media/flow/dance.npz \
+  --output outputs/deploy-sync/backend_trt_check.json
 CUDA_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 PYTHONPATH=src \
   python -m deployment.run_sync --config deployment/sync_flow.json \
-  --steps 10 --output docs/deploy_sync/sync_02s_trt_e10_lp8
+  --steps 10 --output outputs/deploy-sync/sync_02s_trt_e10_lp8
 CUDA_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 PYTHONPATH=src \
   python -m deployment.run_sync --config deployment/sync_flow.json \
-  --steps 5 --output docs/deploy_sync/sync_02s_trt_e5_lp8
+  --steps 5 --output outputs/deploy-sync/sync_02s_trt_e5_lp8
 ```
 
 The checker uses 20 fixed windows from the prior reference tape at each step
