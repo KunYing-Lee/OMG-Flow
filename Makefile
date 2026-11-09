@@ -6,7 +6,7 @@ TORCH_INDEX_URL ?= https://download.pytorch.org/whl/cu124
 INSTALL_EXTRAS ?= all
 PYPI_INDEX_URL ?=
 PIP_INDEX_ARGS := $(if $(PYPI_INDEX_URL),--index-url $(PYPI_INDEX_URL),)
-.PHONY: venv install install-blackwell install-cn install-dev compile train smoke test
+.PHONY: venv install install-blackwell install-cn install-dev compile train smoke test deploy export-sync showcase
 
 venv:
 	$(UV) venv --python $(VENV_PYTHON) .venv
@@ -25,7 +25,7 @@ install-dev: install
 	$(UV) pip install -e ".[dev]" $(PIP_INDEX_ARGS)
 
 compile:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall src tests
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall src deployment tests scripts/validation
 
 FLOW_DEVICES ?= 4
 FLOW_DATA ?= data/bones
@@ -42,3 +42,15 @@ smoke:
 
 test:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m pytest -q
+
+SYNC_CONFIG ?= deployment/sync_flow.json
+SYNC_OUTPUT ?= outputs/sync
+
+deploy:
+	OMP_NUM_THREADS=1 PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m deployment.run_sync --config "$(SYNC_CONFIG)" --output "$(SYNC_OUTPUT)" $(DEPLOY_ARGS)
+
+export-sync:
+	OMP_NUM_THREADS=1 PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m deployment.export_sync --config "$(SYNC_CONFIG)"
+
+showcase:
+	OMP_NUM_THREADS=1 PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/validation/sync_showcase.py --config "$(SYNC_CONFIG)" $(SHOWCASE_ARGS)

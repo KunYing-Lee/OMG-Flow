@@ -1,0 +1,215 @@
+{
+  "date": "2026-11-09",
+  "base_commit": "d3d92cc",
+  "ab_source_commit": "4f7ff92",
+  "host": "hq-g1",
+  "remote_directory": "/root/leeky/projects/OMG-Flow-deploy-sync-trt-20261109",
+  "physical_gpu": 3,
+  "gpu": "GPU-cd8250a1-0961-dbc8-b474-2c69893a2853, NVIDIA GeForce RTX 5090, 595.84",
+  "python": "3.10.22",
+  "packages": {
+    "torch": "2.7.1+cu128",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "mujoco": "3.11.0",
+    "onnx": "1.22.0",
+    "onnxruntime-gpu": "1.23.2",
+    "transformers": "4.57.6",
+    "imageio": "2.38.0",
+    "tensorrt": "10.13.3.9"
+  },
+  "source_and_scene_sha256": {
+    "assets/holomotion/g1_29dof/g1_29dof.xml": "aef83d5144c7c7b1c5760e5871981704a87ea549d9cea12c10582528392ecd29",
+    "assets/holomotion/g1_29dof/scene_29dof.xml": "4e6ae5f0f1d6bee36242fa02c36da1999748f94fa4d2a013f72ca1379b56bd69",
+    "deployment/check_sync_backend.py": "bf5d9459b8cb060b9c575281f9e1a94226960f23484d5fa1c0f3f0fbf6a39249",
+    "deployment/export_sync.py": "6bd8c9639821522692b038e90e8434409eaa0275e37e769d74d48607be74eefd",
+    "deployment/flow_trt.py": "03483fdf47443770921292199bbf1f045cba4ca238ccce9c96c4fa55862241a7",
+    "deployment/g1_native50.py": "13cb66f6b1e9da1621cf617d63baef8b2c3dbb8c9c81dd61929ab1bd1f92a174",
+    "deployment/holomotion_hook.py": "4ccfffef09da99a06f29121a8b332d1b9c135001a18031cc68675c9d46b2b610",
+    "deployment/native50_policy_node.py": "947ffeaa6e4067c19bb0efbc7fabbaab99edc52986fe43496df78fe2e91fa815",
+    "deployment/residual50.py": "4ea7135844fa6caacfa0f7f16d94bdcb2dcc6b4cca20b77b36740f7df84f6e69",
+    "deployment/run_sync.py": "50eac9d23d1ffbdcd8a575411eeec53f045d9c0516e251f27c918bc8e61221d1",
+    "deployment/shadow_native50.py": "8325497f3ed35d8335ae9ab98404858d4e2588e856f274bac8daececf151eaf5",
+    "deployment/sync_flow.json": "76b94251fe2d300b0a3049eb143708f7a13b62093f638eb41c657cb4f6b20cc0",
+    "deployment/sync_flow.py": "4f51156d5faa2f5a85e0a09a5844ce9d5a1c3c39df394a8a35b4ddef045a0462",
+    "deployment/sync_robot.py": "5523cb7f8019c3b280f8f5fcd6e0a56779f73e85564a2e06d8941758e1d7e8ce",
+    "deployment/test_native_stop.py": "df7efd6b71bcc956d454ef2ad9ac4663c53b0799d8f39415c37aae6034d3012f",
+    "deployment/test_residual50.py": "47023000c9d0c1e3b08e1066103d98e2e410fdf64f3622ac21c59829f1541620",
+    "src/omg/generation/conditions/position.py": "5e19e700292e19ddae715fe7f6d7d172637f25b3d15febb01e47258eaf65b9c2",
+    "src/omg/generation/denoisers/transformer.py": "be9533c2aecf34df7d3301b74480dd7eb2cd8d2453d8339c25459755a1edff8d",
+    "src/omg/generation/flow.py": "92af93432a37e8e8fc998c5ad8accdf8c63203bcb49f4b63ab3c92b658a907aa",
+    "src/omg/generation/flow_reference.py": "d64c0ea786d55a6aa0ad8fe2adf18bd7352bceacd16b94f570a63d5cf2e354ee",
+    "src/omg/tracking/holomotion/reference.py": "87aea02fc057c28522fb6d5a62730bcc7b22ac9b6ce409fb537977adf10cedb8",
+    "src/omg/tracking/holomotion/runtime.py": "0abb774974c7967e2051d1c5bc1ee3f5b4ed765d0d137d93a0daed94c0b85042",
+    "src/omg/utils/rotation_conversions.py": "cfa6ee96ba517367c8ab9729c18ed2a120d32243cd7a914470e997d101d7a7e2"
+  },
+  "checkpoint_sha256": "87fee467ef75589ccc39216e08a567fc6a4888b08b3c74200e6775764cece578",
+  "tracker_sha256": "15f7914f6460a1c2e71bc06191874146e7b4d1669dded095e072cf29aac7c056",
+  "tracker_external_sha256": "040d92d87de126dcf6ddbbf89ee5c065ced28e14ee875c3c0f29fd8425c126e8",
+  "engine": {
+    "contract": {
+      "format": "omg-flow-velocity-fp16-v1",
+      "checkpoint_sha256": "87fee467ef75589ccc39216e08a567fc6a4888b08b3c74200e6775764cece578",
+      "gpu": "NVIDIA GeForce RTX 5090",
+      "gpu_uuid": "cd8250a1-0961-dbc8-b474-2c69893a2853",
+      "capability": [
+        12,
+        0
+      ],
+      "tensorrt": "10.13.3.9",
+      "torch": "2.7.1+cu128",
+      "cuda": "12.8",
+      "inputs": {
+        "state": {
+          "shape": [
+            1,
+            100,
+            38
+          ],
+          "dtype": "torch.float32"
+        },
+        "time": {
+          "shape": [
+            1
+          ],
+          "dtype": "torch.float32"
+        },
+        "committed": {
+          "shape": [
+            1,
+            100
+          ],
+          "dtype": "torch.bool"
+        },
+        "context": {
+          "shape": [
+            1,
+            60,
+            512
+          ],
+          "dtype": "torch.float32"
+        },
+        "context_mask": {
+          "shape": [
+            1,
+            60
+          ],
+          "dtype": "torch.bool"
+        }
+      },
+      "source_sha256": {
+        "deployment/flow_trt.py": "03483fdf47443770921292199bbf1f045cba4ca238ccce9c96c4fa55862241a7",
+        "src/omg/generation/flow.py": "92af93432a37e8e8fc998c5ad8accdf8c63203bcb49f4b63ab3c92b658a907aa",
+        "src/omg/generation/denoisers/transformer.py": "be9533c2aecf34df7d3301b74480dd7eb2cd8d2453d8339c25459755a1edff8d",
+        "src/omg/generation/conditions/position.py": "5e19e700292e19ddae715fe7f6d7d172637f25b3d15febb01e47258eaf65b9c2"
+      },
+      "opset": 18,
+      "workspace_bytes": 4294967296
+    },
+    "engine_sha256": "7208afbf1908dd60db4889b3f8844c56dd1a98c97230b80497173f5c1d248987"
+  },
+  "engine_path": "tensorrt_engine_cache/flow_sync/87fee467ef75589ccc39216e08a567fc6a4888b08b3c74200e6775764cece578/cd8250a1-0961-dbc8-b474-2c69893a2853/b3ab07f3e1ce2de9475fed1dd2c349145bf5f0214150f0f9e6d379ae762f443d/velocity.engine",
+  "engine_bytes": 89592340,
+  "engine_reused_both_steps": true,
+  "gpu_guard": [
+    {
+      "phase": "export",
+      "event": "preflight",
+      "utc": "2026-11-09T07:42:49.602464+00:00",
+      "processes": ""
+    },
+    {
+      "phase": "parity",
+      "event": "preflight",
+      "utc": "2026-11-09T07:44:14.904776+00:00",
+      "processes": ""
+    },
+    {
+      "phase": "sim_e10",
+      "event": "preflight",
+      "utc": "2026-11-09T07:44:39.366030+00:00",
+      "processes": ""
+    },
+    {
+      "phase": "sim_e5",
+      "event": "preflight",
+      "utc": "2026-11-09T07:45:55.192580+00:00",
+      "processes": ""
+    },
+    {
+      "event": "complete",
+      "utc": "2026-11-09T07:47:12.233628+00:00"
+    }
+  ],
+  "artifacts": {
+    "backend_trt_check.json": {
+      "bytes": 43868,
+      "sha256": "49a83224dd4338f918bb9488780553b6666e459d57f20b4962f358e7b514e73f"
+    },
+    "gpu_guard.jsonl": {
+      "bytes": 79003,
+      "sha256": "b263ca2ca6ebb523a1c7bdb5c0b120842afadbcaa6b9f3e42675d178c9dbbf91"
+    },
+    "sync_02s_trt_e10_lp8.json": {
+      "bytes": 227248,
+      "sha256": "4e95b22889c58c319fead1d9e1a5d3a9fd3b79ea229e9f098ab7c2acdcdcd53b"
+    },
+    "sync_02s_trt_e10_lp8.mp4": {
+      "bytes": 3994470,
+      "sha256": "980fb2b80c421471b48bdfd0ea0aee90d782b2efc7f604dc3f65c182e95f2d99",
+      "media": {
+        "width": 1280,
+        "height": 480,
+        "r_frame_rate": "50/1",
+        "duration": "10.000000",
+        "nb_frames": "500"
+      }
+    },
+    "sync_02s_trt_e10_lp8.npz": {
+      "bytes": 188310,
+      "sha256": "1430f95406f73728e6d5722682d9eaf74d9df6101ab1eb38b6e4235f387aa177"
+    },
+    "sync_02s_trt_e5_lp8.json": {
+      "bytes": 227009,
+      "sha256": "3dde24e7d21b7e02fe1fa90947a7491cd460168a51daed4b29a714e2f3defc60"
+    },
+    "sync_02s_trt_e5_lp8.mp4": {
+      "bytes": 3972739,
+      "sha256": "964fb0d2e5283644b6eed0f4520dcafc023cb8561d2fd1fa973bd26c4b30846e",
+      "media": {
+        "width": 1280,
+        "height": 480,
+        "r_frame_rate": "50/1",
+        "duration": "10.000000",
+        "nb_frames": "500"
+      }
+    },
+    "sync_02s_trt_e5_lp8.npz": {
+      "bytes": 188346,
+      "sha256": "3f523e06fff4cdd5dc7775f1726cf84898a08f1dae403310a856e47f896904f3"
+    }
+  },
+  "notes": [
+    "One GPU at a time. Accepted runs used GPU 3, checked idle and monitored for foreign processes at 0.5 s intervals.",
+    "Shared host, unlocked GPU clocks. Both accepted TRT runs and historical Torch runs used GPU 3; historical Torch had no filter.",
+    "Control compute spans read through physics/write; logging, trace append and offline rendering are outside it.",
+    "TRT velocity uses FP16 with FP32 I/O/context/Euler/codec and exact CUDA graph replay.",
+    "Physics waits during overruns; simulation is not physical acceptance.",
+    "Initial GPU 0 E5 timing was contaminated by a newly arriving workload; all GPU 0 results were excluded and preserved in gpu0_initial/."
+  ],
+  "validation": {
+    "cpu_tests_passed": 33,
+    "matched_gpu_cases": 40,
+    "guard_samples": 460,
+    "source_hashes_match": true,
+    "artifact_hashes_match": true,
+    "timestamps_match": true,
+    "stage_accounting_matches": true,
+    "media_review_times_s": [
+      1,
+      4,
+      6,
+      9
+    ]
+  }
+}

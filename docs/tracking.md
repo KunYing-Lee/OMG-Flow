@@ -1,13 +1,16 @@
 # Tracking
 
-HoloMotion consumes native50Hz reference poses. `Tracker` verifies a50Hz
-control period and ten future preview frames. `PlanTimeline` replaces only the
-future suffix at fixed boundaries (50 frames by default). Reference derivatives are computed
-on the concatenated raw timeline, without modifying the poses.
+HoloMotion consumes native 50 Hz reference poses. The synchronous
+[HoloTracker](../deployment/sync_robot.py) builds reference features and combines
+them with measured robot state before each tracker call. MuJoCo executes ten
+2 ms physics steps per 20 ms control tick using metadata PD gains and scales.
 
-The velocity stencil reads one additional sample beyond the ten-frame preview.
-Thus a request at25 must finish before39. Same-rate input validation replaces
-the old generic resampling function. Robot sensor sampling and root-state
-estimation remain the hardware controller's responsibility.
+The [SyncScheduler](../deployment/sync_flow.py) preserves a clean 25-frame prefix
+and regenerates only the suffix every ten ticks. It requires the prefix to
+cover both the tracker preview and its additional velocity-stencil frame.
+History is previously committed reference, not measured execution.
 
-See [deployment](realtime_g1.md) for preview packets and the consumer hook.
+There are no balance forces, action corrections or reset-on-fall. Reports retain
+the full trajectory after a height/tilt failure. The SDK boundary still needs
+native sensor, joint-order, enable, watchdog and emergency-stop integration.
+See [deployment](../deployment/README.md).

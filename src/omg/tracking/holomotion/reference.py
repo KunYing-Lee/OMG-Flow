@@ -116,9 +116,13 @@ def body_angvel_from_quats(quats_wxyz: np.ndarray, fps: float) -> np.ndarray:
 
 def native_qpos(qpos_36: np.ndarray, source_fps: float, target_fps: float = 50.) -> np.ndarray:
     if float(source_fps) != 50. or float(target_fps) != 50.:
-        raise ValueError("OMG-Lite accepts native 50Hz motion only; convert datasets outside the runtime")
-    from omg.pipeline.schedule import motion
-    return motion(qpos_36)
+        raise ValueError("OMG-Flow accepts native 50Hz motion only; convert datasets outside the runtime")
+    q = np.asarray(qpos_36, dtype=np.float32)
+    if q.ndim != 2 or q.shape[1] != 36 or not len(q) or not np.isfinite(q).all():
+        raise ValueError("Expected nonempty finite (T,36) qpos")
+    if not np.allclose(np.linalg.norm(q[:, 3:7], axis=1), 1, atol=1e-4):
+        raise ValueError("Root quaternions must be normalized")
+    return q.copy()
 
 
 def g1_qpos_joint_slice_to_onnx(qpos_g1: np.ndarray, onnx_to_g1: np.ndarray) -> np.ndarray:
@@ -129,17 +133,28 @@ def g1_qpos_joint_slice_to_onnx(qpos_g1: np.ndarray, onnx_to_g1: np.ndarray) -> 
 def precompute_reference_features(qpos_g1: np.ndarray, fps: float, onnx_to_g1: np.ndarray) -> dict[str, np.ndarray]:
     qpos_g1 = np.asarray(qpos_g1, dtype=np.float32)
     root_pos = qpos_g1[:, :3].astype(np.float32, copy=False)
-    root_quat = np.stack([normalize_quat_wxyz(q) for q in qpos_g1[:, 3:7]], axis=0)
+    root_quat = qpos_g1[:, 3:7]
+    norms = np.linalg.norm(root_quat, axis=-1, keepdims=True)
+    if np.any(norms < 1e-8):
+        raise ValueError("Quaternion norm is too small")
+    root_quat = root_quat / norms
+    root_quat = np.where(root_quat[:, :1] < 0, -root_quat, root_quat)
+    rotations = Rotation.from_quat(root_quat[:, [1, 2, 3, 0]])
     root_linvel_world = finite_difference(root_pos, fps)
-    base_linvel = np.stack([quat_rotate_inv_wxyz(root_quat[idx], root_linvel_world[idx]) for idx in range(root_quat.shape[0])])
+    # The same body-frame transforms and forward quaternion differences, batched
+    # in SciPy rather than a Python loop for every reference frame.
+    base_angvel = np.zeros_like(root_pos)
+    if len(root_quat) > 1:
+        base_angvel[:-1] = (rotations[:-1].inv() * rotations[1:]).as_rotvec() * fps
+        base_angvel[-1] = base_angvel[-2]
     return {
         "qpos_g1": qpos_g1.astype(np.float32, copy=False),
         "ref_dof_pos_onnx": g1_qpos_joint_slice_to_onnx(qpos_g1, onnx_to_g1),
         "ref_root_height": root_pos[:, 2].astype(np.float32, copy=False),
         "ref_root_quat_wxyz": root_quat.astype(np.float32, copy=False),
-        "ref_gravity_projection": np.stack([gravity_orientation_wxyz(q) for q in root_quat], axis=0),
-        "ref_base_linvel": base_linvel.astype(np.float32, copy=False),
-        "ref_base_angvel": body_angvel_from_quats(root_quat, fps),
+        "ref_gravity_projection": rotations.inv().apply([0, 0, -1]).astype(np.float32),
+        "ref_base_linvel": rotations.inv().apply(root_linvel_world).astype(np.float32),
+        "ref_base_angvel": base_angvel,
     }
 
 
