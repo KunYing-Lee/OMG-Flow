@@ -37,15 +37,20 @@ def run_control(generator, tracker, robot, standing, *, duration, prefix_length,
             sleep(max(0, (deadline - TICK_NS - monotonic_ns()) / 1e9))
         started = perf_counter_ns()
         state = robot.read_state()
+        read_ms = (perf_counter_ns() - started) / 1e6
+        generation_ms = reference_features_ms = 0.0
         if scheduler.replan_due:
             generation_ms = scheduler.replan(generator)
+            feature_started = perf_counter_ns()
             features = tracker.reference_features(scheduler.qpos)
+            reference_features_ms = (perf_counter_ns() - feature_started) / 1e6
             planning_ms = (perf_counter_ns() - started) / 1e6
             replans.append({
                 "tick": tick, "timestamp_ns": int(scheduler.timestamps_ns[scheduler.cursor]),
                 "committed_end_ns": int(scheduler.timestamps_ns[scheduler.cursor + prefix_length - 1]),
                 "suffix_start_ns": int(scheduler.timestamps_ns[scheduler.cursor + prefix_length]),
                 "generation_ms": generation_ms, "planning_ms": planning_ms,
+                "reference_features_ms": reference_features_ms,
                 "splice_joint_step_max_rad": float(np.max(np.abs(np.diff(
                     scheduler.qpos[scheduler.cursor + prefix_length - 1:scheduler.cursor + prefix_length + 1, 7:], axis=0)))),
             })
@@ -55,7 +60,9 @@ def run_control(generator, tracker, robot, standing, *, duration, prefix_length,
                     raise RuntimeError(message)
                 logging.error(message)
         target = tracker.targets(state, features, scheduler.cursor)
+        write_started = perf_counter_ns()
         robot.write_joint_targets(target)
+        write_ms = (perf_counter_ns() - write_started) / 1e6
         elapsed_ms = (perf_counter_ns() - started) / 1e6
         late_ms = max(0, (monotonic_ns() - deadline) / 1e6) if pace else None
         if elapsed_ms > 20 or (late_ms is not None and late_ms > 0):
@@ -68,12 +75,18 @@ def run_control(generator, tracker, robot, standing, *, duration, prefix_length,
         executed.append(state.qpos.copy())
         targets.append(target)
         ticks.append({"tick": tick, "timestamp_ns": int(scheduler.timestamps_ns[scheduler.cursor]),
-                      "state_timestamp_ns": state.timestamp_ns, "compute_ms": elapsed_ms, "late_ms": late_ms})
+                      "state_timestamp_ns": state.timestamp_ns, "compute_ms": elapsed_ms, "late_ms": late_ms,
+                      "generation_ms": generation_ms, "reference_features_ms": reference_features_ms,
+                      "observation_ms": tracker.observation_ms, "tracker_onnx_ms": tracker.onnx_ms,
+                      "feature_build_ms": reference_features_ms + tracker.observation_ms,
+                      "physics_io_ms": read_ms + write_ms,
+                      "other_ms": elapsed_ms - generation_ms - reference_features_ms - tracker.observation_ms
+                                  - tracker.onnx_ms - read_ms - write_ms})
         scheduler.advance()
     return np.asarray(references), np.asarray(executed), np.asarray(targets), ticks, replans
 
 
-def render_video(robot, reference, executed, replans, path, period):
+def render_video(robot, reference, executed, replans, ticks, path, period):
     import imageio.v2 as imageio
     import mujoco
 
@@ -99,7 +112,7 @@ def render_video(robot, reference, executed, replans, path, period):
                 panels.append(draw_overlay(renderer.render().copy(), [
                     label, f"SIM t={tick / 50:.2f}s  tick={tick}  replan={period:.1f}s",
                     f"{'REPLAN NOW' if tick in by_tick else 'last replan'} @{latest['tick']}: {latest['generation_ms']:.2f} ms",
-                    f"20 ms budget: {'OVERRUN' if latest['planning_ms'] > 20 else 'within (planning only)'}",
+                    f"Full tick {ticks[tick]['compute_ms']:.2f} ms: {'OVERRUN' if ticks[tick]['compute_ms'] > 20 else 'within 20 ms'}",
                     "50 Hz simulation time; see JSON for wall-clock deadlines",
                 ]))
             writer.append_data(np.concatenate(panels, axis=1))
@@ -116,11 +129,15 @@ def main():
     parser.add_argument("--period", type=float)
     parser.add_argument("--steps", type=int, choices=(5, 10))
     parser.add_argument("--duration", type=float)
+    parser.add_argument("--backend", choices=("torch-fp32", "torch-fp16", "tensorrt-fp16"))
+    parser.add_argument("--lowpass-hz", type=float, help="0 disables filtering")
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
-    for key, value in (("replan_period", args.period), ("steps", args.steps), ("duration", args.duration)):
+    for key, value in (("replan_period", args.period), ("steps", args.steps), ("duration", args.duration), ("backend", args.backend)):
         if value is not None:
             config[key] = value
+    if args.lowpass_hz is not None:
+        config["lowpass_hz"] = args.lowpass_hz or None
     args.output.parent.mkdir(parents=True, exist_ok=True)
     generator = FlowGenerator(config)
     tracker = HoloTracker(config["tracker"])
@@ -147,9 +164,19 @@ def main():
     for key in ("generation_ms", "planning_ms"):
         values = np.array([row[key] for row in replans])
         report[key] = dict(zip(("p50", "p95", "max"), map(float, np.percentile(values, [50, 95, 100]))))
+    report["latency_ms"] = {}
+    for group, rows in (("all_ticks", ticks), ("replan_ticks", [r for r in ticks if r["tick"] % round(config["replan_period"] * 50) == 0])):
+        report["latency_ms"][group] = {
+            key: {"n": len(rows), **dict(zip(("p50", "p95", "max"), map(float, np.percentile([r[key] for r in rows], [50, 95, 100]))))}
+            for key in ("compute_ms", "generation_ms", "feature_build_ms", "reference_features_ms", "observation_ms", "tracker_onnx_ms", "physics_io_ms", "other_ms")
+        }
+    if generator.trt is not None:
+        report["engine"] = {"path": str(generator.trt.path), "cache_hit": generator.trt.cache_hit,
+                            "contract": generator.trt.contract}
     fallen = executed[:, 2] < 0.45
     report.update({
         "duration_s": len(ticks) / 50, "control_overruns": sum(row["compute_ms"] > 20 for row in ticks),
+        "deadline_misses": sum(row["late_ms"] is not None and row["late_ms"] > 0 for row in ticks),
         "replan_overruns": sum(row["planning_ms"] > 20 for row in replans),
         "root_height_min_m": float(executed[:, 2].min()),
         "first_height_below_045m_s": float(np.flatnonzero(fallen)[0] / 50) if fallen.any() else None,
@@ -157,7 +184,7 @@ def main():
         "root_position_rmse_m": float(np.sqrt(np.mean(np.sum((reference[:, :3] - executed[:, :3]) ** 2, axis=1)))),
     })
     args.output.with_suffix(".json").write_text(json.dumps(report, indent=2) + "\n")
-    render_video(robot, reference, executed, replans, args.output.with_suffix(".mp4"), config["replan_period"])
+    render_video(robot, reference, executed, replans, ticks, args.output.with_suffix(".mp4"), config["replan_period"])
     print(json.dumps({key: value for key, value in report.items() if key not in ("ticks", "replans")}, indent=2))
 
 

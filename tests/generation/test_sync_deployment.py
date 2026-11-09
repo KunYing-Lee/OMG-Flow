@@ -148,3 +148,85 @@ def test_batched_tracker_features_match_scalar_rotation_formulas():
         quat_rotate_inv_wxyz(q, v) for q, v in zip(rotations, finite_difference(qpos[:, :3], 50))
     ]), atol=3e-5, rtol=1e-6)
     np.testing.assert_allclose(features["ref_base_angvel"], body_angvel_from_quats(rotations, 50), atol=3e-6)
+
+
+def test_lowpass_matches_ab_spec_and_uses_committed_boundary():
+    from scipy.signal import butter, filtfilt
+    from deployment.sync_flow import filter_suffix
+
+    rng = np.random.default_rng(21)
+    window = rng.standard_normal((1, 110, 38), dtype=np.float32)
+    original = window.copy()
+    b, a = butter(4, 8 / 25)
+    expected = filtfilt(b, a, window.astype(np.float64), axis=1)[:, 35:]
+    actual = filter_suffix(window, 10, 25, 8)
+    np.testing.assert_array_equal(actual, expected)
+    np.testing.assert_array_equal(window, original)
+    # Filtering only the suffix would be a different boundary condition.
+    isolated = filtfilt(b, a, window[:, 35:].astype(np.float64), axis=1)
+    assert np.max(np.abs(actual[:, :5] - isolated[:, :5])) > 0.1
+
+
+def test_lowpass_frequency_response_and_zero_phase():
+    from deployment.sync_flow import filter_suffix
+
+    time = np.arange(110) / 50
+    low, high = np.sin(2 * np.pi * 2 * time), np.sin(2 * np.pi * 20 * time)
+    window = np.tile((low + high)[None, :, None], (1, 1, 38))
+    filtered = filter_suffix(window, 10, 25, 8)[0, :, 0]
+    # Exclude padding/boundary transient: preserve 2 Hz phase/amplitude, reject 20 Hz.
+    np.testing.assert_allclose(filtered[15:-15], low[50:-15], atol=0.002)
+
+
+def test_control_latency_partition(monkeypatch):
+    from types import SimpleNamespace
+    from deployment import run_sync, sync_flow
+
+    clock = [0]
+    monkeypatch.setattr(run_sync, "perf_counter_ns", lambda: clock[0])
+    monkeypatch.setattr(sync_flow, "perf_counter_ns", lambda: clock[0])
+
+    class Generator(AnalyticGenerator):
+        history, horizon = 10, 100
+
+        def generate(self, *args):
+            clock[0] += 4_000_000
+            return super().generate(*args)
+
+    class Robot:
+        def read_state(self):
+            clock[0] += 100_000
+            return SimpleNamespace(qpos=scheduler().qpos[0], timestamp_ns=0)
+
+        def write_joint_targets(self, targets):
+            clock[0] += 2_000_000
+
+    class Tracker:
+        metadata = SimpleNamespace(context_length=1, n_fut_frames=10)
+        observation_ms, onnx_ms = 0.5, 1.0
+
+        def reference_features(self, qpos):
+            clock[0] += 700_000
+            return qpos
+
+        def targets(self, state, features, cursor):
+            clock[0] += 1_500_000
+            return np.zeros(29)
+
+    _, _, _, ticks, _ = run_sync.run_control(
+        Generator(), Tracker(), Robot(), scheduler().qpos[0], duration=0.04,
+        prefix_length=25, replan_period=0.2, seed=1234, epoch_ns=0, pace=False)
+    assert ticks[0]["compute_ms"] == pytest.approx(8.3)
+    assert ticks[0]["feature_build_ms"] == pytest.approx(1.2)
+    assert ticks[0]["physics_io_ms"] == pytest.approx(2.1)
+    assert ticks[0]["other_ms"] == pytest.approx(0)
+    assert ticks[1]["generation_ms"] == ticks[1]["reference_features_ms"] == 0
+    assert ticks[1]["compute_ms"] == pytest.approx(3.6)
+
+
+@pytest.mark.parametrize("cutoff", [-1, 0, 25, float("nan"), float("inf")])
+def test_rejects_invalid_filter_cutoff_before_loading_cuda(cutoff):
+    from deployment.sync_flow import FlowGenerator
+
+    with pytest.raises(ValueError, match="lowpass_hz"):
+        FlowGenerator({"steps": 10, "prefix_length": 25, "lowpass_hz": cutoff})

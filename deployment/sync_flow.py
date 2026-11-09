@@ -15,33 +15,48 @@ from omg.generation.flow_reference import FlowReferenceGenerator
 TICK_NS = 20_000_000
 
 
-class FlowGenerator(nn.Module):
-    """One fixed prompt/prefix/step count; TensorRT if present, otherwise CUDA FP16.
+def filter_suffix(window, history, prefix, cutoff_hz):
+    """Posttrain 4f7ff92: float64 filtfilt on normalized xyz/rot6d/joints.
 
-    CUDA graph replay removes Python launch overhead without changing Euler or
-    moving generation out of the requesting control tick. CPU geometry stays FP32.
+    Context participates in filtering, but only the suffix is returned. Never
+    filter world quaternions or copy filtered history/prefix into the tape.
     """
+    from scipy import signal
+
+    b, a = signal.butter(4, cutoff_hz / 25.)
+    return signal.filtfilt(b, a, window.astype(np.float64), axis=1,
+                           padtype="odd", padlen=15)[:, history + prefix:].copy()
+
+
+class FlowGenerator(nn.Module):
+    """Explicit velocity backend; exact Euler math with fixed-shape CUDA replay."""
 
     def __init__(self, config):
         super().__init__()
         if config["steps"] not in (5, 10):
             raise ValueError("steps must be 5 or 10")
-        self.steps = config["steps"]
-        self.prefix = config["prefix_length"]
-        self.reference = FlowReferenceGenerator.from_checkpoint(config["checkpoint"], "cuda")
+        self.steps, self.prefix = config["steps"], config["prefix_length"]
+        self.lowpass_hz = config.get("lowpass_hz")
+        if self.lowpass_hz is not None and not 0 < self.lowpass_hz < 25:
+            raise ValueError("lowpass_hz must be null (off) or lie in (0, 25) Hz")
+        backend = config["backend"]
+        if backend not in ("torch-fp32", "torch-fp16", "tensorrt-fp16"):
+            raise ValueError("backend must be torch-fp32, torch-fp16 or tensorrt-fp16")
+        self.reference = FlowReferenceGenerator.from_checkpoint(config["checkpoint"], "cuda").requires_grad_(False)
         self.history, self.horizon = self.reference.history, self.reference.horizon
         if self.reference.model.text_proj is None:
             raise ValueError("A text-conditioned OMG-Flow checkpoint is required")
         if not 0 < self.prefix < self.horizon:
             raise ValueError("prefix_length must lie strictly inside the Flow horizon")
         self.contract = {
-            "format": "omg-flow-sync-v1", "steps": self.steps, "prefix_length": self.prefix,
+            "format": "omg-flow-sync-v2", "steps": self.steps, "prefix_length": self.prefix,
             "checkpoint_sha256": hashlib.sha256(Path(config["checkpoint"]).read_bytes()).hexdigest(),
             "prompt": config["prompt"], "history": self.history, "horizon": self.horizon,
+            "lowpass_hz": self.lowpass_hz,
         }
-        # Encode once at startup, in FP32 as in training; no text work in the loop.
         encoder = FrozenT5TextEncoder(config["text_encoder"], max_length=50, frozen_eval=True).cuda().eval()
-        text = encoder([config["prompt"]])
+        with torch.inference_mode():
+            text = encoder([config["prompt"]])
         self.register_buffer("text_tokens", text["context"])
         self.register_buffer("text_mask", text["mask"])
         self.eval()
@@ -52,58 +67,78 @@ class FlowGenerator(nn.Module):
         }
         self.inputs["history_qpos"][..., 3] = 1
         self.inputs["committed_qpos"][..., 3] = 1
-        self.engine = None
-        engine_path = Path(config["engine_path"]) if config.get("engine_path") else None
-        if engine_path is not None and engine_path.is_file():
-            import tensorrt as trt
+        self.trt = None
+        if backend == "tensorrt-fp16":
+            from deployment.flow_trt import FlowTRT
 
-            if json.loads(engine_path.with_suffix(".json").read_text()) != self.contract:
-                raise ValueError("TensorRT engine does not match checkpoint, prompt, steps and prefix")
-            self.trt_runtime = trt.Runtime(trt.Logger(trt.Logger.WARNING))
-            self.engine = self.trt_runtime.deserialize_cuda_engine(engine_path.read_bytes())
-            self.context = self.engine.create_execution_context()
-            self.output = torch.empty(1, self.horizon - self.prefix, 36, device="cuda")
-            tensors = {**self.inputs, "suffix": self.output}
-            if {self.engine.get_tensor_name(i) for i in range(self.engine.num_io_tensors)} != tensors.keys():
-                raise ValueError("Expected the OMG-Flow synchronous engine I/O contract")
-            for name, tensor in tensors.items():
-                if (tuple(self.engine.get_tensor_shape(name)) != tuple(tensor.shape)
-                        or self.engine.get_tensor_dtype(name) != trt.float32):
-                    raise ValueError(f"Unexpected engine binding: {name}")
-                self.context.set_tensor_address(name, tensor.data_ptr())
-            self.backend = "tensorrt-fp16"
-        else:
-            self.backend = "torch-fp16-cudagraph"
-            # Fixed shapes and explicit noise make this an exact replay of the
-            # same eager program. Warmup/capture never consumes scheduler noise.
-            torch.cuda.synchronize()
-            with torch.inference_mode(), torch.cuda.stream(torch.cuda.Stream()):
-                for _ in range(3):
-                    self.forward(*self.inputs.values())
-            torch.cuda.synchronize()
-            self.graph = torch.cuda.CUDAGraph()
-            with torch.inference_mode(), torch.cuda.graph(self.graph):
-                self.output = self.forward(*self.inputs.values())
+            with torch.inference_mode():
+                self.trt = FlowTRT(self.reference, self.text_tokens, self.text_mask,
+                                   self.contract["checkpoint_sha256"], config["engine_cache"])
+        self.backend = backend + "-cudagraph"
+        self.precision = "fp16" if backend == "torch-fp16" else "fp32"
+        self.filtered = torch.empty(1, self.horizon - self.prefix, 38, device="cuda")
+        # CPU filtering separates sampling and decoding into two exact graphs.
+        # Warmup/capture does not consume scheduler noise or a control tick.
+        torch.cuda.synchronize()
+        with torch.inference_mode(), torch.cuda.stream(torch.cuda.Stream()):
             for _ in range(3):
-                self.graph.replay()
-            torch.cuda.synchronize()
+                window = self.forward(*self.inputs.values())
+                self.filtered.copy_(window[:, self.history + self.prefix:])
+                self.decode(self.filtered)
+        torch.cuda.synchronize()
+        self.graph, self.decode_graph = torch.cuda.CUDAGraph(), torch.cuda.CUDAGraph()
+        with torch.inference_mode(), torch.cuda.graph(self.graph):
+            self.window = self.forward(*self.inputs.values())
+        with torch.inference_mode(), torch.cuda.graph(self.decode_graph):
+            self.output = self.decode(self.filtered)
+        for _ in range(3):
+            self.generate(*(value[0].cpu().numpy() for value in self.inputs.values()))
+        torch.cuda.synchronize()
 
-    def forward(self, history_qpos, committed_qpos, noise):
-        with torch.autocast("cuda", dtype=torch.float16):
-            return self.reference.generate_suffix(
-                history_qpos, committed_qpos, noise, steps=self.steps,
-                text_tokens=self.text_tokens, text_mask=self.text_mask,
-            ).float()
+    def forward(self, history_qpos, committed_qpos, noise, *, precision=None, use_trt=True):
+        from omg.data.bones import encode_bones_window
+
+        ref = self.reference
+        known = encode_bones_window(torch.cat([history_qpos, committed_qpos], dim=1),
+                                    self.history, ref.mean, ref.std)
+        with torch.autocast("cuda", dtype=torch.float16, enabled=(precision or self.precision) == "fp16"):
+            context, context_mask = ref.model._context(known[:, :self.history], self.text_tokens, self.text_mask)
+            committed = known[:, self.history:]
+            committed_mask = (torch.arange(self.horizon, device=noise.device) < self.prefix)[None]
+            suffix = noise[:, self.prefix:]
+            velocity = self.trt if use_trt and self.trt is not None else ref.model._velocity
+            for step in range(self.steps):
+                state = torch.cat([committed, suffix], dim=1)
+                time = torch.full((1,), step / self.steps, device=noise.device, dtype=torch.float32)
+                v = velocity(state, time, committed_mask, context, context_mask)
+                suffix = suffix + v[:, self.prefix:].to(suffix.dtype) / self.steps
+        return torch.cat([known, suffix], dim=1)
+
+    def decode(self, suffix):
+        import torch.nn.functional as F
+        from omg.motion.feature_codec import heading_quaternions
+        from omg.utils.rotation_conversions import (
+            matrix_to_quaternion, quaternion_apply, quaternion_multiply, rotation_6d_to_matrix,
+        )
+
+        features = suffix * self.reference.std + self.reference.mean
+        anchor = self.inputs["history_qpos"][:, -1:]
+        heading, _ = heading_quaternions(anchor[..., 3:7])
+        orientation = F.normalize(matrix_to_quaternion(rotation_6d_to_matrix(features[..., 3:9])), dim=-1)
+        return torch.cat([quaternion_apply(heading, features[..., :3]) + anchor[..., :3],
+                          F.normalize(quaternion_multiply(heading, orientation), dim=-1), features[..., 9:]], dim=-1)
 
     @torch.inference_mode()
     def generate(self, history, committed, noise):
         for tensor, value in zip(self.inputs.values(), (history, committed, noise)):
             tensor.copy_(torch.from_numpy(value)[None])
-        if self.engine is None:
-            self.graph.replay()
-        elif not self.context.execute_async_v3(torch.cuda.current_stream().cuda_stream):
-            raise RuntimeError("TensorRT execution failed")
-        # This copy synchronizes the GPU before returning to the SAME control tick.
+        self.graph.replay()
+        if self.lowpass_hz is None:
+            self.filtered.copy_(self.window[:, self.history + self.prefix:])
+        else:
+            suffix = filter_suffix(self.window.cpu().numpy(), self.history, self.prefix, self.lowpass_hz)
+            self.filtered.copy_(torch.from_numpy(suffix))
+        self.decode_graph.replay()
         return self.output[0].cpu().numpy().copy()
 
 

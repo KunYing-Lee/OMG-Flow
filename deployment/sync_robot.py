@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
+from time import perf_counter_ns
 
 import numpy as np
 
@@ -66,6 +67,7 @@ class HoloTracker:
         return precompute_reference_features(qpos, fps=50, onnx_to_g1=self.order)
 
     def targets(self, state, features, cursor):
+        started = perf_counter_ns()
         obs = build_holomotion_obs(
             features, cursor, self.metadata.n_fut_frames, None, None, self.handles, self.last_action,
             context_length=self.metadata.context_length, obs_schema_version=self.metadata.obs_schema_version,
@@ -74,7 +76,10 @@ class HoloTracker:
                 "joint_vel": state.joint_velocity, "gyro": state.gyro,
             },
         )
+        self.observation_ms = (perf_counter_ns() - started) / 1e6
+        started = perf_counter_ns()
         self.last_action = self.tracker.run(obs)
+        self.onnx_ms = (perf_counter_ns() - started) / 1e6
         if not np.isfinite(self.last_action).all():
             raise RuntimeError("Nonfinite tracker action")
         targets = np.empty(29, dtype=np.float32)

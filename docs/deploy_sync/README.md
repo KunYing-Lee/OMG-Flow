@@ -1,5 +1,10 @@
 # OMG-Flow synchronous deployment evidence — 2026-11-09
 
+**Latest:** [TensorRT FP16 + 8 Hz suffix-filter validation](TRT.md), including
+matched precision checks, full-control-tick latency breakdowns and new MP4s.
+
+## Historical Torch baseline (`d3d92cc`)
+
 The Flow-only synchronous loop is implemented and recorded. **Physical deployment
 is not accepted:** the SDK is deliberately unbound, ten-step control ticks miss
 deadlines, and tracking is unstable in these standing-start simulations. Five
