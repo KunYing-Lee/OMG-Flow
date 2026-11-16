@@ -17,10 +17,10 @@ The tested CUDA stack is Torch 2.8.0+cu128 / TensorRT 10.13.3.9 on RTX 5090.
 from deployment.flow_runtime import FlowRuntime
 
 runtime = FlowRuntime({
-    "checkpoint": "/models/best.pt", "device": "cuda",
+    "checkpoint": "<checkpoint>", "device": "cuda",
     "backend": "tensorrt-fp16", "engine_cache": "tensorrt_engine_cache/flow_sync",
     "steps": 10, "prefix_length": 25, "lowpass_hz": 8.0,
-    "prompt": "A person walks forward.", "text_cache": "/models/walk-text",
+    "prompt": "A person walks forward.", "text_cache": "<text-cache>",
 })
 suffix_qpos = runtime.generate(history_qpos, committed_qpos, noise)
 # Alternatively: runtime.generate(history_qpos, committed_qpos, seed=1234, replan_index=3)
@@ -61,8 +61,8 @@ path requires no T5 model or Transformers installation. Prompt lookup is exact.
 
 ```bash
 PYTHONPATH=src python -m deployment.flow_runtime text-cache \
-  --prompt 'A person walks forward.' --text-encoder /models/t5-base-local \
-  --device cuda --output /models/walk-text
+  --prompt 'A person walks forward.' --text-encoder "<text-encoder>" \
+  --device cuda --output "<text-cache>"
 ```
 
 Cache creation needs `.[train]` and the pinned T5 snapshot verified by
@@ -82,11 +82,11 @@ script can create a small deterministic example without a checkpoint.
 ```bash
 python scripts/validation/parity_cce4ad3.py golden --prefix 25 --output inputs.npz
 PYTHONPATH=src python -m deployment.flow_runtime plan \
-  --checkpoint /models/best.pt --text-cache /models/walk-text \
+  --checkpoint "<checkpoint>" --text-cache "<text-cache>" \
   --prompt 'A person walks forward.' --input inputs.npz \
   --backend tensorrt-fp16 --lowpass-hz 8 --output plan.npz
 PYTHONPATH=src python -m deployment.flow_runtime benchmark \
-  --checkpoint /models/best.pt --text-cache /models/walk-text \
+  --checkpoint "<checkpoint>" --text-cache "<text-cache>" \
   --prompt 'A person walks forward.' --input inputs.npz \
   --backend tensorrt-fp16 --lowpass-hz 8 --warmup 10 --iterations 100 \
   --output latency.json
@@ -100,4 +100,4 @@ building, warmup and graph capture. With-decode timing includes the output copy
 to CPU. These are generator measurements, not end-to-end robot control deadlines.
 
 See [validation evidence](../docs/deploy_runtime/VALIDATION.md) for fixed-checkpoint
-results, exact commands and the remote-copy audit.
+results and reproduction commands.

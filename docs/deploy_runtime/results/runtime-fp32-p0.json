@@ -1,6 +1,6 @@
 {
   "validation_script_sha256": "60cad157f614bd0da73b8e1d4182cd8b9292529a6027c038d314badb31a8b47e",
-  "source": "/home/leeky/flow-handoff-20261116/omgflow",
+  "source": "<workdir>",
   "source_commit": "aa92092bca48456d963614f11ec527680adbdd04",
   "implementation": "runtime",
   "backend": "torch-fp32",
@@ -16,7 +16,7 @@
   "cuda": "12.8",
   "numpy": "2.2.6",
   "tf32": false,
-  "rotation_source": "/home/leeky/flow-handoff-20261116/omgflow/src/omg/utils/rotation_conversions.py",
+  "rotation_source": "<workdir>/src/omg/utils/rotation_conversions.py",
   "source_files_sha256": {
     "src/omg/generation/flow_reference.py": "d64c0ea786d55a6aa0ad8fe2adf18bd7352bceacd16b94f570a63d5cf2e354ee",
     "src/omg/generation/flow.py": "92af93432a37e8e8fc998c5ad8accdf8c63203bcb49f4b63ab3c92b658a907aa",
