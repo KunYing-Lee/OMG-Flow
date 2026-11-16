@@ -1,0 +1,122 @@
+[
+  {
+    "path": "assets/omg_flow_best.pt",
+    "files": 1,
+    "bytes": 522776299
+  },
+  {
+    "path": "assets/t5-base-local",
+    "files": 24,
+    "bytes": 893829486
+  },
+  {
+    "path": "omgflow/.cache",
+    "files": 129,
+    "bytes": 15421521
+  },
+  {
+    "path": "omgflow/.git",
+    "files": 60,
+    "bytes": 78217384
+  },
+  {
+    "path": "omgflow/.venv",
+    "files": 34387,
+    "bytes": 11849688160
+  },
+  {
+    "path": "omgflow/artifacts",
+    "files": 55,
+    "bytes": 914463
+  },
+  {
+    "path": "omgflow/artifacts-initial-yaw",
+    "files": 39,
+    "bytes": 703052
+  },
+  {
+    "path": "omgflow/assets",
+    "files": 42,
+    "bytes": 19222893
+  },
+  {
+    "path": "omgflow/configs",
+    "files": 35,
+    "bytes": 19806
+  },
+  {
+    "path": "omgflow/dependencies-install.log",
+    "files": 1,
+    "bytes": 16711
+  },
+  {
+    "path": "omgflow/deployment",
+    "files": 13,
+    "bytes": 83259
+  },
+  {
+    "path": "omgflow/oracle-cce4ad3",
+    "files": 248,
+    "bytes": 22726768
+  },
+  {
+    "path": "omgflow/oracle-main",
+    "files": 235,
+    "bytes": 20427974
+  },
+  {
+    "path": "omgflow/runtime-change.bundle",
+    "files": 1,
+    "bytes": 18748
+  },
+  {
+    "path": "omgflow/scripts",
+    "files": 8,
+    "bytes": 39147
+  },
+  {
+    "path": "omgflow/source-git.tar.gz",
+    "files": 1,
+    "bytes": 75629440
+  },
+  {
+    "path": "omgflow/src",
+    "files": 146,
+    "bytes": 1122776
+  },
+  {
+    "path": "omgflow/tensorrt_engine_cache",
+    "files": 3,
+    "bytes": 266118963
+  },
+  {
+    "path": "omgflow/tests",
+    "files": 53,
+    "bytes": 215659
+  },
+  {
+    "path": "omgflow/text-cache.log",
+    "files": 1,
+    "bytes": 474
+  },
+  {
+    "path": "omgflow/tmp",
+    "files": 0,
+    "bytes": 0
+  },
+  {
+    "path": "omgflow/torch-install.log",
+    "files": 1,
+    "bytes": 8532
+  },
+  {
+    "path": "omgflow/validate.sh",
+    "files": 1,
+    "bytes": 3425
+  },
+  {
+    "path": "omgflow/validation.log",
+    "files": 1,
+    "bytes": 199
+  }
+]

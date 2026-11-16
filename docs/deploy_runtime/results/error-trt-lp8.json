@@ -1,0 +1,88 @@
+{
+  "reference": "artifacts/torch-fp32-lp8.npz",
+  "candidate": "artifacts/tensorrt-fp16-lp8.npz",
+  "tolerance": 1e-05,
+  "qpos_passed": false,
+  "metrics": {
+    "qpos": {
+      "max_abs": 0.0032604336738586426,
+      "rmse": 0.0006789873358293262,
+      "bitwise_equal": false,
+      "position_mm": {
+        "max": 0.8401724124881327,
+        "p95": 0.7678112954088504,
+        "rms": 0.4950086163016551
+      }
+    },
+    "qpos_replay": {
+      "max_abs": 0.011913716793060303,
+      "rmse": 0.001493498633407507,
+      "bitwise_equal": false
+    },
+    "body_positions": {
+      "max_abs": 0.001084446907043457,
+      "rmse": 0.0003671328158390927,
+      "bitwise_equal": false,
+      "position_mm": {
+        "max": 1.329944698403041,
+        "p95": 1.019275694369249,
+        "rms": 0.6358926901591364
+      }
+    },
+    "rotation_axis_angle": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "rotation_inverse": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "rotation_matrix_to_quaternion": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "native_qpos": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_qpos_g1": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_dof_pos_onnx": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_root_height": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_root_quat_wxyz": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_gravity_projection": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_base_linvel": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_base_angvel": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    }
+  }
+}
