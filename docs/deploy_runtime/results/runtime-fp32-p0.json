@@ -1,0 +1,39 @@
+{
+  "validation_script_sha256": "60cad157f614bd0da73b8e1d4182cd8b9292529a6027c038d314badb31a8b47e",
+  "source": "<workdir>",
+  "source_commit": "aa92092bca48456d963614f11ec527680adbdd04",
+  "implementation": "runtime",
+  "backend": "torch-fp32",
+  "steps": 10,
+  "prefix": 0,
+  "lowpass_hz": null,
+  "cuda_graph": true,
+  "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+  "input_sha256": "3db93ae448e6868b928cf5165b84de02df9810e737e9ad619306c157fa340d55",
+  "text_cache_signature": "8c7d1e0e74149251634fa5100e97330830362c78970f901802b1c8c975e38a85",
+  "prompt": "A person walks forward.",
+  "torch": "2.8.0+cu128",
+  "cuda": "12.8",
+  "numpy": "2.2.6",
+  "tf32": false,
+  "rotation_source": "<workdir>/src/omg/utils/rotation_conversions.py",
+  "source_files_sha256": {
+    "src/omg/generation/flow_reference.py": "d64c0ea786d55a6aa0ad8fe2adf18bd7352bceacd16b94f570a63d5cf2e354ee",
+    "src/omg/generation/flow.py": "92af93432a37e8e8fc998c5ad8accdf8c63203bcb49f4b63ab3c92b658a907aa",
+    "src/omg/utils/rotation_conversions.py": "cfa6ee96ba517367c8ab9729c18ed2a120d32243cd7a914470e997d101d7a7e2",
+    "src/omg/pipeline/checkpoint.py": "8b3476c1ee137d8af510e88a154ceb4f80a09a2565c9941e2a8fc6479d592ebd",
+    "src/omg/tracking/holomotion/reference.py": "1729eee9d0bdbe4393f6e091ce1067f8d4bc8584d70d5013685ff9426b4e0f0e"
+  },
+  "runtime_contract": {
+    "format": "omg-flow-sync-v2",
+    "steps": 10,
+    "prefix_length": 0,
+    "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+    "prompt": "A person walks forward.",
+    "history": 10,
+    "horizon": 100,
+    "lowpass_hz": null,
+    "text_cache_signature": "8c7d1e0e74149251634fa5100e97330830362c78970f901802b1c8c975e38a85"
+  },
+  "runtime_source_sha256": "f634b6e5e541c666dc432143674496adf0ad0f0890d9473749cacee4d597ce7f"
+}

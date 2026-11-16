@@ -1,0 +1,88 @@
+{
+  "reference": "artifacts/cce4ad3-p25.npz",
+  "candidate": "artifacts/main-p25.npz",
+  "tolerance": 1e-05,
+  "qpos_passed": true,
+  "metrics": {
+    "qpos": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true,
+      "position_mm": {
+        "max": 0.0,
+        "p95": 0.0,
+        "rms": 0.0
+      }
+    },
+    "qpos_replay": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "body_positions": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true,
+      "position_mm": {
+        "max": 0.0,
+        "p95": 0.0,
+        "rms": 0.0
+      }
+    },
+    "rotation_axis_angle": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "rotation_inverse": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "rotation_matrix_to_quaternion": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "native_qpos": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_qpos_g1": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_dof_pos_onnx": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_root_height": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_root_quat_wxyz": {
+      "max_abs": 5.960464477539063e-08,
+      "rmse": 1.3447172827488014e-08,
+      "bitwise_equal": false
+    },
+    "tracking_ref_gravity_projection": {
+      "max_abs": 2.980232238769531e-07,
+      "rmse": 8.655295321653893e-08,
+      "bitwise_equal": false
+    },
+    "tracking_ref_base_linvel": {
+      "max_abs": 1.4901161193847656e-08,
+      "rmse": 5.765516394452989e-09,
+      "bitwise_equal": false
+    },
+    "tracking_ref_base_angvel": {
+      "max_abs": 2.4586915969848633e-06,
+      "rmse": 4.682836844569731e-07,
+      "bitwise_equal": false
+    }
+  }
+}

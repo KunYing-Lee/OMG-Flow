@@ -1,0 +1,28 @@
+{
+  "batch": 1,
+  "backend": "torch-fp16-cudagraph",
+  "contract": {
+    "format": "omg-flow-sync-v2",
+    "steps": 10,
+    "prefix_length": 25,
+    "checkpoint_sha256": "3f8d9f8a9cbc96cb034e6c0cb2b1bfccd38816a8dca66c68df3f24b7f49f9cde",
+    "prompt": "A person walks forward.",
+    "history": 10,
+    "horizon": 100,
+    "lowpass_hz": 8.0,
+    "text_cache_signature": "8c7d1e0e74149251634fa5100e97330830362c78970f901802b1c8c975e38a85"
+  },
+  "warmup": 10,
+  "iterations": 100,
+  "timing": "wall clock, synchronized; includes validation, copies and optional filter; excludes construction",
+  "without_decode": {
+    "p50_ms": 21.318171,
+    "p95_ms": 22.14973895,
+    "max_ms": 22.485192
+  },
+  "with_decode": {
+    "p50_ms": 21.4599695,
+    "p95_ms": 21.6428543,
+    "max_ms": 22.142912
+  }
+}

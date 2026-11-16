@@ -1,0 +1,88 @@
+{
+  "reference": "artifacts/main-sync-lp8.npz",
+  "candidate": "artifacts/torch-fp32-lp8.npz",
+  "tolerance": 1e-05,
+  "qpos_passed": true,
+  "metrics": {
+    "qpos": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true,
+      "position_mm": {
+        "max": 0.0,
+        "p95": 0.0,
+        "rms": 0.0
+      }
+    },
+    "qpos_replay": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "body_positions": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true,
+      "position_mm": {
+        "max": 0.0,
+        "p95": 0.0,
+        "rms": 0.0
+      }
+    },
+    "rotation_axis_angle": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "rotation_inverse": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "rotation_matrix_to_quaternion": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "native_qpos": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_qpos_g1": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_dof_pos_onnx": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_root_height": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_root_quat_wxyz": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_gravity_projection": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_base_linvel": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    },
+    "tracking_ref_base_angvel": {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "bitwise_equal": true
+    }
+  }
+}
