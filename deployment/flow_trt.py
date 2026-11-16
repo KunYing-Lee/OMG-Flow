@@ -44,9 +44,10 @@ class FlowTRT:
             "tensorrt": trt.__version__, "torch": torch.__version__, "cuda": torch.version.cuda,
             "inputs": {name: {"shape": list(value.shape), "dtype": str(value.dtype)}
                        for name, value in self.inputs.items()},
-            "source_sha256": {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in (
-                Path(__file__).relative_to(Path.cwd()), Path("src/omg/generation/flow.py"),
-                Path("src/omg/generation/denoisers/transformer.py"), Path("src/omg/generation/conditions/position.py"))},
+            "source_sha256": {name: hashlib.sha256((Path(__file__).resolve().parents[1] / name).read_bytes()).hexdigest()
+                              for name in ("deployment/flow_trt.py", "src/omg/generation/flow.py",
+                                           "src/omg/generation/denoisers/transformer.py",
+                                           "src/omg/generation/conditions/position.py")},
             "opset": 18, "workspace_bytes": 4 << 30,
         }
         key = hashlib.sha256(json.dumps(self.contract, sort_keys=True).encode()).hexdigest()

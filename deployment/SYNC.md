@@ -2,7 +2,8 @@
 
 Run from the repository root with `src` on `PYTHONPATH`. This is the default deployment entrypoint. It loads `MotionFlow` checkpoints
 through `FlowReferenceGenerator` and executes generation and tracking in the
-same thread.
+same thread. The generator is also available as a simulator-independent
+[plan runtime](RUNTIME.md), with external noise, text-cache loading and plan/latency CLI.
 
 ```bash
 # Check processes first; select one genuinely idle GPU.
