@@ -1,0 +1,19 @@
+{
+  "checkpoint": "assets/flow.pt",
+  "text_cache": "assets/text_cache",
+  "prompt": "A person walks forward.",
+  "steps": 10,
+  "lowpass_hz": 8.0,
+  "start_history": {"path": "assets/start.npz", "key": "history"},
+  "play_frames": 364,
+  "seed": 1234,
+  "episode_id": 0,
+  "backend": "tensorrt-fp16",
+  "device": "cuda",
+  "engine_directory": "assets/engines",
+  "noise_policy": null,
+  "robot_xml": null,
+  "start_gate": {"joint_rad": 0.3, "height_m": 0.10, "yaw_deg": 10.0},
+  "switch_seconds": 0.5,
+  "after_end": "hold"
+}

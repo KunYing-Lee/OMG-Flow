@@ -23,6 +23,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+realtime = ["pyzmq>=27"]
 train = [
   "sentencepiece>=0.2,<0.3",
   "transformers>=4.40,<5",
@@ -56,6 +57,7 @@ export = [
 ]
 dev = [
   "pytest>=8.0",
+  "pyzmq>=27",
 ]
 all = [
   "datasets>=4,<5",
@@ -70,6 +72,7 @@ all = [
   "pandas>=2.2,<2.4",
   "pyarrow>=16,<23",
   "pytest>=8.0",
+  "pyzmq>=27",
   "tensorrt-cu12>=10.13,<10.17",
   "sentencepiece>=0.2,<0.3",
   "transformers>=4.40,<5",
